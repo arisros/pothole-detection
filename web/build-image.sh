@@ -19,8 +19,8 @@ rm -rf "$CTX/app/cnn/__pycache__"
 cp "$ROOT/experiments/weights.npz" "$CTX/app/weights.npz"
 cp "$ROOT/data/processed/norm_stats.json" "$CTX/app/norm_stats.json"
 
-# --- Statis ---
-cp "$ROOT"/web/static/* "$CTX/www/"
+# --- Statis (hanya file top-level: html/css/js; folder preview lokal diabaikan) ---
+find "$ROOT/web/static" -maxdepth 1 -type f -exec cp {} "$CTX/www/" \;
 cp "$ROOT"/experiments/figures/*.png "$CTX/www/figures/"
 cp "$ROOT"/docs/*.md "$CTX/www/content/"
 cp "$ROOT/makalah/makalah-deteksi-jalan-berlubang-cnn.md" "$CTX/www/content/makalah.md"
