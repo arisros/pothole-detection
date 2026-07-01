@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deteksi Jalan Berlubang — CNN dari Nol (LeNet-5)</title>
+<meta name="description" content="Klasifikasi citra jalan berlubang dengan CNN LeNet-5 yang inti algoritmanya ditulis manual dengan NumPy. Demo model live, dokumentasi, dan makalah.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="module">
+  // Import only the wired-elements we use, pinned to one exact version so the shared
+  // wired-lib dedupes and each custom element is registered exactly once. (The
+  // wired-elements meta-package double-registers via unpkg's range resolution, and
+  // esm.sh's bundle renders the components empty — hence direct leaf imports.)
+  import "https://unpkg.com/wired-card@2.1.0?module";
+  import "https://unpkg.com/wired-button@2.1.0?module";
+  import "https://unpkg.com/wired-progress@2.1.0?module";
+</script>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">🕳️ Potholes&nbsp;CNN</span>
+    <nav>
+      <a href="#demo">Demo Live</a>
+      <a href="#hasil">Hasil</a>
+      <a href="#arsitektur">Arsitektur</a>
+      <a href="#docs">Dokumentasi</a>
+      <a href="viewer.html?doc=makalah">Makalah</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Deteksi Jalan Berlubang dengan CNN<br>yang Ditulis dari Nol</h1>
+    <p class="lead">Klasifikasi citra <b>jalan berlubang</b> vs <b>jalan normal</b> menggunakan
+      arsitektur <b>LeNet-5</b> yang seluruh intinya — konvolusi, pooling, ReLU, softmax,
+      cross-entropy, dan backpropagation — diimplementasikan manual dengan NumPy,
+      <b>tanpa</b> framework deep learning.</p>
+    <div class="badges">
+      <wired-card class="badge" elevation="1">Akurasi uji <b>75,7%</b></wired-card>
+      <wired-card class="badge" elevation="1">F1 <b>75,5%</b></wired-card>
+      <wired-card class="badge" elevation="1">Gradient check <b>10⁻⁹–10⁻¹¹</b></wired-card>
+      <wired-card class="badge" elevation="1">712 citra · 32×32 grayscale</wired-card>
+    </div>
+  </div>
+
+  <section id="demo">
+    <h2>🔬 Demo Model Live</h2>
+    <p class="sub">Unggah foto permukaan jalan, lalu model LeNet-5 (NumPy murni) akan
+      memprediksinya secara langsung di server.</p>
+    <div class="demo">
+      <div>
+        <wired-card class="dropcard" id="dropcard" elevation="2">
+          <label class="drop" id="drop">
+            <input type="file" id="file" accept="image/*" hidden>
+            <div id="dropContent">
+              <div style="font-size:2.2rem">📷</div>
+              <div class="hint">Klik atau jatuhkan gambar di sini</div>
+            </div>
+          </label>
+        </wired-card>
+        <div class="pickrow">
+          <wired-button id="pick" elevation="2">Pilih Gambar</wired-button>
+        </div>
+        <div class="samples" id="samples">
+          <span class="hint" style="width:100%;text-align:center;color:var(--muted);font-size:.85rem">
+            atau coba contoh:</span>
+        </div>
+      </div>
+      <wired-card class="result" id="result" elevation="2">
+        <div class="verdict idle" id="verdict">Menunggu gambar…</div>
+        <div class="bar">
+          <div class="row"><span>🟢 normal</span><span id="pNormal">–</span></div>
+          <wired-progress class="prog normal" id="fNormal" value="0"></wired-progress>
+        </div>
+        <div class="bar">
+          <div class="row"><span>🟠 pothole (berlubang)</span><span id="pPothole">–</span></div>
+          <wired-progress class="prog pothole" id="fPothole" value="0"></wired-progress>
+        </div>
+        <div class="note">Model dilatih pada data & resolusi terbatas (32×32). Prediksi bersifat
+          ilustratif untuk menunjukkan cara kerja CNN, bukan untuk penggunaan kritis.</div>
+      </wired-card>
+    </div>
+  </section>
+
+  <section id="hasil">
+    <h2>📊 Hasil Pengujian</h2>
+    <p class="sub">Metrik pada data uji (107 citra yang belum pernah dilihat model).</p>
+    <div class="grid cols-3">
+      <wired-card class="card metric" elevation="1"><div class="val">75,7%</div><div class="lbl">Akurasi</div></wired-card>
+      <wired-card class="card metric" elevation="1"><div class="val">78,4%</div><div class="lbl">Presisi</div></wired-card>
+      <wired-card class="card metric" elevation="1"><div class="val">72,7%</div><div class="lbl">Recall</div></wired-card>
+    </div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <wired-card class="card" elevation="1"><h3>Confusion Matrix</h3>
+        <img src="figures/confusion_matrix.png" alt="confusion matrix" style="width:100%;border-radius:10px;margin-top:8px"></wired-card>
+      <wired-card class="card" elevation="1"><h3>Kurva Pelatihan</h3>
+        <img src="figures/training_curves.png" alt="kurva pelatihan" style="width:100%;border-radius:10px;margin-top:8px"></wired-card>
+    </div>
+  </section>
+
+  <section id="arsitektur">
+    <h2>🧠 Arsitektur & Pergerakan Hidden Layer</h2>
+    <p class="sub">Aliran dimensi data saat melewati tiap lapisan (rumus ukuran (W−N+2P)/S+1).</p>
+    <div class="mermaid" style="background:#fff;border-radius:12px;padding:18px">
+flowchart LR
+    A["Input<br/>1×32×32"] --> B["Conv1 6@5×5 + ReLU<br/>6×28×28"]
+    B --> C["MaxPool<br/>6×14×14"]
+    C --> D["Conv2 16@5×5 + ReLU<br/>16×10×10"]
+    D --> E["MaxPool<br/>16×5×5"]
+    E --> F["Flatten<br/>400"]
+    F --> G["FC-120"]
+    G --> H["FC-84"]
+    H --> I["Softmax<br/>normal/pothole"]
+    </div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <wired-card class="card" elevation="1"><h3>Feature map — pothole</h3>
+        <img src="figures/feature_maps_pothole.png" alt="feature map pothole" style="width:100%;border-radius:10px;margin-top:8px"></wired-card>
+      <wired-card class="card" elevation="1"><h3>Feature map — normal</h3>
+        <img src="figures/feature_maps_normal.png" alt="feature map normal" style="width:100%;border-radius:10px;margin-top:8px"></wired-card>
+    </div>
+  </section>
+
+  <section id="docs">
+    <h2>📚 Dokumentasi Teknis</h2>
+    <p class="sub">Diagram Mermaid memvisualkan aliran data & gradien antar hidden layer.</p>
+    <div class="grid cols-2">
+      <a class="doccard" href="viewer.html?doc=00-ringkasan"><wired-card class="card" elevation="1"><h3>Ringkasan & Pipeline</h3><p>Alur penelitian dari data hingga evaluasi.</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=01-arsitektur"><wired-card class="card" elevation="1"><h3>Arsitektur LeNet-5</h3><p>Aliran dimensi tiap lapisan + perhitungan.</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=02-forward-pass"><wired-card class="card" elevation="1"><h3>Forward Pass</h3><p>Aliran data maju antar hidden layer.</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=03-backpropagation"><wired-card class="card" elevation="1"><h3>Backpropagation</h3><p>Aliran gradien mundur (p − y).</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=04-training-loop"><wired-card class="card" elevation="1"><h3>Training Loop</h3><p>Satu iterasi pelatihan (sequence diagram).</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=05-struktur-kode"><wired-card class="card" elevation="1"><h3>Struktur Kode</h3><p>Class diagram modul cnn.</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=06-formula"><wired-card class="card" elevation="1"><h3>Kumpulan Formula</h3><p>Forward & backward tiap lapisan.</p></wired-card></a>
+      <a class="doccard" href="viewer.html?doc=makalah"><wired-card class="card" elevation="1"><h3>📄 Makalah Lengkap</h3><p>Makalah ilmiah ≥20 halaman (Bahasa Indonesia).</p></wired-card></a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Implementasi CNN dari nol dengan NumPy · Arsitektur LeNet-5 · Notasi mengikuti slide
+       Rinaldi Munir (ITB, 2024).<br>
+       Inti pembelajaran 100% manual; Pillow/sklearn/matplotlib hanya helper. Seluruh angka
+       reproducible (seed=42).</p>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: "default" });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

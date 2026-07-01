@@ -1,0 +1,6 @@
+# Inti CNN ditulis manual hanya dengan NumPy (tanpa autograd/framework DL).
+numpy>=1.24
+# Helper pinggiran (bukan inti):
+pillow>=9.0        # baca/tulis & resize citra
+scikit-learn>=1.2  # train_test_split (stratified)
+matplotlib>=3.6    # plot kurva, confusion matrix, feature map

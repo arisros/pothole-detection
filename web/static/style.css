@@ -1,0 +1,123 @@
+:root {
+  --bg: #faf7f0;        /* warm paper */
+  --panel: #fffdf8;     /* lighter paper for cards */
+  --panel2: #f1ece1;    /* subtle fill / code bg */
+  --border: #cabfa6;    /* faint sketch outline (for non-wired bits) */
+  --text: #1c1c1c;      /* ink */
+  --muted: #5b5750;     /* faded ink */
+  --accent: #1a5fb4;    /* hand-drawn ink blue */
+  --accent2: #c8590f;   /* pothole orange */
+  --green: #2e8b57;     /* normal green */
+  --red: #c0392b;
+  --radius: 14px;
+  --hand: "Patrick Hand", "Comic Sans MS", cursive, sans-serif;
+  --hand-display: "Gochi Hand", "Patrick Hand", cursive, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--hand);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+h1, h2, h3, .brand { font-family: var(--hand-display); font-weight: 400; letter-spacing: .3px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+/* wired components draw their strokes with currentColor — keep them inked */
+wired-card, wired-button, wired-progress, wired-input, wired-combo { color: var(--text); }
+
+header.site {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(250,247,240,0.88); backdrop-filter: blur(8px);
+  border-bottom: 2px dashed var(--border);
+}
+header.site .wrap { display: flex; align-items: center; gap: 18px; height: 58px; }
+header.site .brand { font-weight: 700; font-size: 1.05rem; }
+header.site nav { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+header.site nav a { color: var(--muted); font-size: .95rem; }
+header.site nav a:hover { color: var(--text); text-decoration: none; }
+
+.hero { padding: 64px 0 36px; text-align: center; }
+.hero h1 { font-size: 2.3rem; line-height: 1.2; margin: 0 0 12px; }
+.hero p.lead { font-size: 1.12rem; color: var(--muted); max-width: 720px; margin: 0 auto 22px; }
+.badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.badge { display: inline-block; padding: 8px 16px; font-size: .95rem; color: var(--muted); }
+.badge b { color: var(--text); }
+
+section { padding: 34px 0; border-top: 2px dashed var(--border); }
+section h2 { font-size: 1.7rem; margin: 0 0 6px; }
+section .sub { color: var(--muted); margin: 0 0 22px; }
+
+.grid { display: grid; gap: 18px; }
+.grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+/* wired-card renders its own sketchy border, so .card only handles inner spacing */
+.card { display: block; padding: 20px; background: transparent; }
+.card h3 { margin: 0 0 8px; font-size: 1.25rem; }
+.card p { margin: 0; color: var(--muted); font-size: 1rem; }
+.doccard { display: block; color: inherit; text-decoration: none; }
+.doccard:hover { text-decoration: none; }
+.doccard:hover .card h3 { color: var(--accent); }
+.metric { text-align: center; }
+.metric .val { font-size: 2.2rem; color: var(--accent); }
+.metric .lbl { color: var(--muted); font-size: 1rem; }
+
+/* Demo */
+.demo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 760px) { .demo { grid-template-columns: 1fr; } }
+/* wired-card provides the sketchy frame; the label just handles layout + hover */
+.dropcard { display: block; }
+.drop {
+  display: block; padding: 26px; text-align: center; cursor: pointer;
+  border-radius: var(--radius); transition: background .15s;
+}
+.drop:hover, .drop.over { background: rgba(26,95,180,0.06); }
+.drop img { max-width: 100%; max-height: 240px; border-radius: 10px; margin-top: 10px; }
+.drop .hint { color: var(--muted); font-size: 1rem; }
+.pickrow { display: flex; justify-content: center; margin-top: 14px; }
+#pick { cursor: pointer; }
+.samples { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; justify-content: center; }
+.samples img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
+  border: 2px solid var(--border); cursor: pointer; opacity: .85; }
+.samples img:hover { opacity: 1; border-color: var(--accent); }
+
+.result { display: block; padding: 22px; background: transparent; }
+.result .verdict { font-size: 1.7rem; margin: 0 0 16px; }
+.result .verdict.pothole { color: var(--accent2); }
+.result .verdict.normal { color: var(--green); }
+.result .verdict.idle { color: var(--muted); font-size: 1.15rem; }
+.bar { margin: 12px 0; }
+.bar .row { display: flex; justify-content: space-between; font-size: 1rem; margin-bottom: 6px; }
+.prog { display: block; width: 100%; }
+.prog.normal { --wired-progress-color: var(--green); }
+.prog.pothole { --wired-progress-color: var(--accent2); }
+.note { color: var(--muted); font-size: .92rem; margin-top: 14px; }
+
+footer { padding: 36px 0; border-top: 2px dashed var(--border); color: var(--muted); font-size: 1rem; }
+
+/* Markdown viewer */
+.md { padding: 30px 0 60px; }
+.md h1 { font-size: 2.2rem; border-bottom: 2px dashed var(--border); padding-bottom: 10px; }
+.md h2 { font-size: 1.7rem; margin-top: 1.8em; border-bottom: 2px dashed var(--border); padding-bottom: 6px; }
+.md h3 { font-size: 1.35rem; margin-top: 1.5em; }
+.md table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 1rem; }
+.md th, .md td { border: 1px solid var(--border); padding: 7px 11px; text-align: left; }
+.md th { background: var(--panel2); }
+.md tr:nth-child(even) td { background: rgba(0,0,0,0.03); }
+.md img { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); margin: 12px 0; }
+/* keep code monospace — it must not inherit the handwriting body font */
+.md code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background: var(--panel2); padding: 2px 6px; border-radius: 6px; font-size: .88em; }
+.md pre { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; overflow-x: auto; }
+.md pre code { background: none; padding: 0; }
+.md blockquote { border-left: 3px solid var(--accent); margin: 14px 0; padding: 4px 16px;
+  color: var(--muted); background: var(--panel); border-radius: 0 8px 8px 0; }
+.md .mermaid { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 16px 0; text-align: center; }
+.toc { background: var(--panel); border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 14px 18px; margin-bottom: 24px; }
+.toc a { display: inline-block; margin: 3px 10px 3px 0; color: var(--muted); font-size: 1rem; }
+.spinner { color: var(--muted); padding: 40px 0; text-align: center; }
