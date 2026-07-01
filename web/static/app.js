@@ -1,84 +1,61 @@
-// Logika demo: unggah/jatuhkan gambar -> POST byte mentah ke /api/predict -> tampilkan hasil.
+// Demo: unggah/jatuhkan gambar -> POST byte mentah ke /api/predict -> tampilkan hasil.
 (function () {
-  const drop = document.getElementById("drop");
-  const dropCard = document.getElementById("dropcard");
-  const pick = document.getElementById("pick");
-  const fileInput = document.getElementById("file");
-  const dropContent = document.getElementById("dropContent");
-  const verdict = document.getElementById("verdict");
-  const pNormal = document.getElementById("pNormal");
-  const pPothole = document.getElementById("pPothole");
-  const fNormal = document.getElementById("fNormal");
-  const fPothole = document.getElementById("fPothole");
-  const samplesEl = document.getElementById("samples");
+  const $ = (id) => document.getElementById(id);
+  const drop = $("drop"), fileInput = $("file"), pick = $("pick");
+  const dropContent = $("dropContent"), samplesEl = $("samples");
+  const verdict = $("verdict"), conf = $("conf");
+  const pNormal = $("pNormal"), pPothole = $("pPothole");
+  const fNormal = $("fNormal"), fPothole = $("fPothole");
 
   const SAMPLES = [
     "samples/pothole_1.jpg", "samples/pothole_2.jpg", "samples/pothole_3.jpg",
     "samples/normal_1.jpg", "samples/normal_2.jpg", "samples/normal_3.jpg",
   ];
-
   SAMPLES.forEach((src) => {
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = "contoh";
-    img.addEventListener("click", () => classifyUrl(src));
+    const img = new Image();
+    img.src = src; img.alt = "contoh";
+    img.addEventListener("click", () => classify(fetch(src).then((r) => r.blob())));
     samplesEl.appendChild(img);
   });
 
-  function showPreview(srcOrBlob) {
-    const url = typeof srcOrBlob === "string" ? srcOrBlob : URL.createObjectURL(srcOrBlob);
-    const img = new Image();
-    // once the preview image has real dimensions, ask the wired-card to redraw
-    // its sketchy border so it fits the new content.
-    img.onload = () => { if (dropCard && dropCard.requestUpdate) dropCard.requestUpdate(); };
-    img.src = url;
-    img.alt = "pratinjau";
+  function preview(blob) {
+    const url = URL.createObjectURL(blob);
     dropContent.innerHTML = "";
+    const img = new Image();
+    img.src = url; img.alt = "pratinjau";
+    img.onload = () => URL.revokeObjectURL(url);
     dropContent.appendChild(img);
   }
 
-  function setBusy() {
+  function busy() {
     verdict.className = "verdict idle";
     verdict.textContent = "Memproses…";
+    conf.textContent = "menjalankan LeNet-5 (NumPy)…";
   }
 
-  function render(data) {
-    if (data.error) {
+  function render(d) {
+    if (d.error) {
       verdict.className = "verdict idle";
-      verdict.textContent = "Gagal: " + data.error;
+      verdict.textContent = "Gagal memproses";
+      conf.textContent = d.error;
       return;
     }
-    const pn = data.proba.normal, pp = data.proba.pothole;
-    verdict.className = "verdict " + data.label;
-    verdict.textContent = data.label === "pothole"
-      ? "🟠 Terdeteksi BERLUBANG" : "🟢 Jalan NORMAL";
+    const pn = d.proba.normal, pp = d.proba.pothole;
+    const isP = d.label === "pothole";
+    verdict.className = "verdict " + d.label;
+    verdict.textContent = isP ? "Terdeteksi berlubang." : "Jalan terlihat normal.";
+    conf.textContent = "keyakinan " + (Math.max(pn, pp) * 100).toFixed(1) + "%";
     pNormal.textContent = (pn * 100).toFixed(1) + "%";
     pPothole.textContent = (pp * 100).toFixed(1) + "%";
-    // wired-progress is driven by its `.value` property (0–100), not CSS width.
-    fNormal.value = +(pn * 100).toFixed(1);
-    fPothole.value = +(pp * 100).toFixed(1);
+    fNormal.style.width = (pn * 100).toFixed(1) + "%";
+    fPothole.style.width = (pp * 100).toFixed(1) + "%";
   }
 
-  async function classifyBlob(blob) {
-    setBusy();
-    showPreview(blob);
+  async function classify(blobOrPromise) {
+    busy();
     try {
-      const res = await fetch("/api/predict", {
-        method: "POST",
-        headers: { "Content-Type": blob.type || "image/jpeg" },
-        body: blob,
-      });
-      render(await res.json());
-    } catch (e) {
-      render({ error: String(e) });
-    }
-  }
-
-  async function classifyUrl(url) {
-    setBusy();
-    showPreview(url);
-    try {
-      const blob = await (await fetch(url)).blob();
+      const blob = await blobOrPromise;
+      preview(blob);
       const res = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": blob.type || "image/jpeg" },
@@ -91,15 +68,15 @@
   }
 
   fileInput.addEventListener("change", (e) => {
-    if (e.target.files[0]) classifyBlob(e.target.files[0]);
+    if (e.target.files[0]) classify(Promise.resolve(e.target.files[0]));
   });
-  if (pick) pick.addEventListener("click", () => fileInput.click());
+  if (pick) pick.addEventListener("click", (e) => { e.preventDefault(); fileInput.click(); });
   ["dragenter", "dragover"].forEach((ev) =>
     drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave", "drop"].forEach((ev) =>
     drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", (e) => {
     const f = e.dataTransfer.files[0];
-    if (f) classifyBlob(f);
+    if (f) classify(Promise.resolve(f));
   });
 })();

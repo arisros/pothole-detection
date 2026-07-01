@@ -9,3 +9,8 @@ experiments/weights.npz
 
 # OS
 .DS_Store
+
+# aset preview lokal (di-assemble build-image.sh)
+web/static/figures/
+web/static/content/
+web/static/samples/
