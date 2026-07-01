@@ -219,15 +219,38 @@ footer .meta { color: var(--muted); font-size: .9rem; }
 footer .flinks { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0; font-family: var(--mono); font-size: .85rem; }
 
 /* ---------- Markdown viewer ------------------------------------------ */
-.docwrap { display: grid; grid-template-columns: 200px 1fr; gap: 40px; padding: 34px 0 70px; }
-@media (max-width: 820px) { .docwrap { grid-template-columns: 1fr; gap: 8px; } }
-.sidenav { position: sticky; top: 78px; align-self: start; font-size: .9rem; }
-@media (max-width: 820px) { .sidenav { position: static; border-bottom: 1px dashed var(--line-2); padding-bottom: 12px; margin-bottom: 8px; } }
-.sidenav a { display: block; padding: 6px 10px; color: var(--muted); border-radius: 7px; }
-.sidenav a:hover { color: var(--ink); text-decoration: none; background: var(--paper-2); }
-@media (max-width: 820px) { .sidenav { display: flex; flex-wrap: wrap; gap: 4px; } .sidenav a { padding: 5px 9px; font-size: .82rem; } }
+.docwrap { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  gap: 40px; padding: 24px 22px 70px; }
+@media (max-width: 820px) { .docwrap { grid-template-columns: minmax(0, 1fr); gap: 0; } }
 
-.md { font-size: 1.02rem; line-height: 1.75; max-width: 72ch; }
+/* Sidenav: daftar vertikal di desktop */
+.sidenav { position: sticky; top: 74px; align-self: start; font-size: .9rem; }
+.sidenav a { display: block; padding: 7px 11px; color: var(--muted); border-radius: 7px; font-family: var(--mono); font-size: .82rem; }
+.sidenav a:hover { color: var(--ink); text-decoration: none; background: var(--paper-2); }
+.sidenav a.active { color: var(--paper); background: var(--ink); }
+
+/* Mobile: chip-bar horizontal yang bisa digeser (swipe), sticky di bawah topbar */
+@media (max-width: 820px) {
+  .sidenav {
+    position: sticky; top: 60px; z-index: 30;
+    display: flex; flex-wrap: nowrap; gap: 8px; align-self: stretch; min-width: 0;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    backdrop-filter: blur(6px);
+    margin: 0 0 16px; padding: 11px 0;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .sidenav::-webkit-scrollbar { display: none; }
+  .sidenav a { flex: 0 0 auto; white-space: nowrap; padding: 8px 14px; border-radius: 999px;
+    border: 1.5px solid var(--line-2); background: var(--card); color: var(--ink-soft); }
+  .sidenav a.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+}
+
+.md { font-size: 1.02rem; line-height: 1.75; max-width: 72ch; min-width: 0; }
+/* Elemen lebar discroll di dalam kotaknya, tidak memotong/memaksa lebar halaman */
+.md pre, .md table, .md .mermaid, .md mjx-container { max-width: 100%; }
+.md mjx-container { overflow-x: auto; overflow-y: hidden; }
+.md mjx-container[display="true"] { display: block; }
 .md h1 { font-family: var(--serif); font-weight: 600; font-size: 2rem; line-height: 1.15;
   margin: 0 0 .5em; letter-spacing: -.01em; }
 .md h2 { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; margin: 1.9em 0 .5em;

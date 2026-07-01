@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -71,6 +71,13 @@ mermaid.initialize({ startOnLoad: false, theme: "base", themeVariables: {
 
 const params = new URLSearchParams(location.search);
 const doc = (params.get("doc") || "00-ringkasan").replace(/[^a-z0-9_-]/gi, "");
+// tandai tab dokumen yang sedang dibuka + geser ke sana pada chip-bar mobile
+document.querySelectorAll(".sidenav a").forEach((a) => {
+  if ((a.getAttribute("href") || "").endsWith("doc=" + doc)) {
+    a.classList.add("active");
+    requestAnimationFrame(() => a.scrollIntoView({ inline: "center", block: "nearest" }));
+  }
+});
 
 function protectMath(src) {
   const store = [];
