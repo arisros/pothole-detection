@@ -1,3 +1,19 @@
+// Menu hamburger (mobile): toggle nav + tutup saat klik link / luar area.
+(function () {
+  const btn = document.getElementById("menuBtn");
+  const nav = document.getElementById("nav");
+  if (!btn || !nav) return;
+  const setOpen = (open) => {
+    nav.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+  btn.addEventListener("click", (e) => { e.stopPropagation(); setOpen(!nav.classList.contains("open")); });
+  nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+  document.addEventListener("click", (e) => {
+    if (nav.classList.contains("open") && !nav.contains(e.target) && e.target !== btn) setOpen(false);
+  });
+})();
+
 // Demo: unggah/jatuhkan gambar -> POST byte mentah ke /api/predict -> tampilkan hasil.
 (function () {
   const $ = (id) => document.getElementById(id);

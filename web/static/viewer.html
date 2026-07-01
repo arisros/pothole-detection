@@ -9,20 +9,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="index.html" style="text-decoration:none">pothole<span class="dot">·</span>cnn</a>
-    <nav>
+    <a class="brand" href="index.html">pothole<span class="dot">·</span>cnn</a>
+    <button class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="nav">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="nav">
       <a href="index.html#demo">Demo</a>
-      <a href="index.html#docs" class="hide-sm">Dokumentasi</a>
-      <a href="https://github.com/arisros/pothole-detection" target="_blank" rel="noopener">GitHub</a>
+      <a href="index.html#hasil">Hasil</a>
+      <a href="index.html#docs">Dokumentasi</a>
+      <a href="viewer.html?doc=makalah">Makalah</a>
+      <a href="https://github.com/arisros/pothole-detection" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
 </header>
+<script>
+  (function () {
+    const btn = document.getElementById("menuBtn"), nav = document.getElementById("nav");
+    const setOpen = (o) => { nav.classList.toggle("open", o); btn.setAttribute("aria-expanded", o); };
+    btn.addEventListener("click", (e) => { e.stopPropagation(); setOpen(!nav.classList.contains("open")); });
+    nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+    document.addEventListener("click", (e) => {
+      if (nav.classList.contains("open") && !nav.contains(e.target) && e.target !== btn) setOpen(false);
+    });
+  })();
+</script>
 
 <div class="wrap docwrap">
   <nav class="sidenav">
