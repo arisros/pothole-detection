@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# Data mentah & artefak besar (dapat dihasilkan ulang via `make all`)
+data/raw/
+data/processed/*.npz
+experiments/weights.npz
+
+# OS
+.DS_Store

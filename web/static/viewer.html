@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dokumentasi — Potholes CNN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html" style="color:var(--text)">🕳️ Potholes&nbsp;CNN</a>
+    <nav>
+      <a href="index.html#demo">Demo Live</a>
+      <a href="index.html#docs">Dokumentasi</a>
+      <a href="viewer.html?doc=makalah">Makalah</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toc" id="toc">
+    <a href="viewer.html?doc=00-ringkasan">Ringkasan</a>
+    <a href="viewer.html?doc=01-arsitektur">Arsitektur</a>
+    <a href="viewer.html?doc=02-forward-pass">Forward</a>
+    <a href="viewer.html?doc=03-backpropagation">Backprop</a>
+    <a href="viewer.html?doc=04-training-loop">Training</a>
+    <a href="viewer.html?doc=05-struktur-kode">Kode</a>
+    <a href="viewer.html?doc=06-formula">Formula</a>
+    <a href="viewer.html?doc=makalah"><b>Makalah</b></a>
+  </div>
+  <article class="md" id="content">
+    <div class="spinner">Memuat…</div>
+  </article>
+</div>
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [["$", "$"]], displayMath: [["$$", "$$"]] },
+  options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<script>
+mermaid.initialize({ startOnLoad: false, theme: "default" });
+
+const params = new URLSearchParams(location.search);
+const doc = (params.get("doc") || "00-ringkasan").replace(/[^a-z0-9_-]/gi, "");
+const url = "content/" + doc + ".md";
+
+function protectMath(src) {
+  const store = [];
+  // blok $$ ... $$
+  src = src.replace(/\$\$[\s\S]*?\$\$/g, (m) => {
+    store.push(m); return "@@MATH" + (store.length - 1) + "@@";
+  });
+  // inline $ ... $ (hindari $$ yang sudah ditangani)
+  src = src.replace(/\$[^\$\n]+?\$/g, (m) => {
+    store.push(m); return "@@MATH" + (store.length - 1) + "@@";
+  });
+  return { src, store };
+}
+function restoreMath(html, store) {
+  return html.replace(/@@MATH(\d+)@@/g, (_, i) => store[+i]);
+}
+
+fetch(url)
+  .then((r) => { if (!r.ok) throw new Error("dokumen tidak ditemukan"); return r.text(); })
+  .then((raw) => {
+    const { src, store } = protectMath(raw);
+    let html = marked.parse(src, { gfm: true, breaks: false });
+    html = restoreMath(html, store);
+    const el = document.getElementById("content");
+    el.innerHTML = html;
+
+    // Perbaiki path gambar -> figures/
+    el.querySelectorAll("img").forEach((img) => {
+      const s = img.getAttribute("src") || "";
+      const base = s.split("/").pop();
+      img.setAttribute("src", "figures/" + base);
+    });
+    // Perbaiki tautan .md -> viewer.html?doc=
+    el.querySelectorAll("a").forEach((a) => {
+      const href = a.getAttribute("href") || "";
+      if (href.endsWith(".md")) {
+        const name = href.split("/").pop().replace(/\.md$/, "");
+        a.setAttribute("href", "viewer.html?doc=" + name);
+      }
+    });
+    // Ubah blok kode mermaid -> div.mermaid
+    el.querySelectorAll("code.language-mermaid").forEach((code) => {
+      const div = document.createElement("div");
+      div.className = "mermaid";
+      div.textContent = code.textContent;
+      code.closest("pre").replaceWith(div);
+    });
+    mermaid.run({ querySelector: ".mermaid" });
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([el]);
+    }
+    document.title = doc + " — Potholes CNN";
+  })
+  .catch((e) => {
+    document.getElementById("content").innerHTML =
+      '<p style="color:var(--red)">Gagal memuat: ' + e.message + "</p>";
+  });
+</script>
+</body>
+</html>
