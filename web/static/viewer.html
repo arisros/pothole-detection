@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -64,8 +64,10 @@ window.MathJax = {
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 <script>
-mermaid.initialize({ startOnLoad: false, theme: "base", themeVariables: {
-  fontFamily: "JetBrains Mono, monospace", fontSize: "13px",
+mermaid.initialize({ startOnLoad: false, theme: "base",
+  flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 45, rankSpacing: 55 },
+  themeVariables: {
+  fontFamily: "JetBrains Mono, monospace", fontSize: "15px",
   primaryColor: "#fffdf8", primaryTextColor: "#211d17", primaryBorderColor: "#cabfa4",
   lineColor: "#7a7264", secondaryColor: "#efe8d9" } });
 
@@ -103,6 +105,42 @@ fetch("content/" + doc + ".md")
     el.querySelectorAll("code.language-mermaid").forEach((c) => {
       const d = document.createElement("div"); d.className = "mermaid"; d.textContent = c.textContent;
       c.closest("pre").replaceWith(d);
+    });
+    // Bungkus pasangan kode ↔ diagram: ":::pair Judul" ... blok kode + blok mermaid ... ":::"
+    // Desktop tampil side-by-side; layar sempit jadi tab (Kode/Diagram).
+    el.querySelectorAll("p").forEach((p) => {
+      const t = (p.textContent || "").trim();
+      if (!t.startsWith(":::pair")) return;
+      const cap = t.slice(7).trim();
+      const between = [];
+      let n = p.nextElementSibling, closer = null;
+      while (n) {
+        if (n.tagName === "P" && n.textContent.trim() === ":::") { closer = n; break; }
+        between.push(n); n = n.nextElementSibling;
+      }
+      const pre = between.find((x) => x.tagName === "PRE");
+      const dia = between.find((x) => x.classList && x.classList.contains("mermaid"));
+      if (!pre || !dia) return;               // butuh kode DAN diagram
+      const fig = document.createElement("figure"); fig.className = "codepair";
+      if (cap) { const fc = document.createElement("figcaption"); fc.textContent = cap; fig.appendChild(fc); }
+      const tabs = document.createElement("div"); tabs.className = "cp-tabs";
+      const mk = (label, key, on) => { const b = document.createElement("button");
+        b.className = "cp-tab" + (on ? " active" : ""); b.textContent = label; b.dataset.t = key;
+        tabs.appendChild(b); return b; };
+      const bCode = mk("Kode", "code", true), bDia = mk("Diagram", "diagram", false);
+      fig.appendChild(tabs);
+      const body = document.createElement("div"); body.className = "cp-body";
+      const pc = document.createElement("div"); pc.className = "cp-panel cp-code active"; pc.appendChild(pre);
+      const pd = document.createElement("div"); pd.className = "cp-panel cp-diagram"; pd.appendChild(dia);
+      body.appendChild(pc); body.appendChild(pd); fig.appendChild(body);
+      p.replaceWith(fig);
+      between.forEach((x) => { if (x !== pre && x !== dia && x.parentNode) x.remove(); });
+      if (closer) closer.remove();
+      [bCode, bDia].forEach((btn) => btn.addEventListener("click", () => {
+        tabs.querySelectorAll(".cp-tab").forEach((b) => b.classList.toggle("active", b === btn));
+        pc.classList.toggle("active", btn.dataset.t === "code");
+        pd.classList.toggle("active", btn.dataset.t === "diagram");
+      }));
     });
     mermaid.run({ querySelector: ".mermaid" });
     if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]);

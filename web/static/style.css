@@ -246,7 +246,11 @@ footer .flinks { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0; font
   .sidenav a.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 }
 
-.md { font-size: 1.02rem; line-height: 1.75; max-width: 72ch; min-width: 0; }
+.md { font-size: 1.02rem; line-height: 1.75; min-width: 0; }
+/* Prosa dibatasi ~72ch agar enak dibaca; elemen lebar (diagram, kode, tabel,
+   codepair) boleh memakai lebar kolom penuh sehingga diagram tidak mengecil. */
+.md > p, .md > ul, .md > ol, .md > h1, .md > h2, .md > h3,
+.md > h4, .md > blockquote { max-width: 72ch; }
 /* Elemen lebar discroll di dalam kotaknya, tidak memotong/memaksa lebar halaman */
 .md pre, .md table, .md .mermaid, .md mjx-container { max-width: 100%; }
 .md mjx-container { overflow-x: auto; overflow-y: hidden; }
@@ -269,5 +273,38 @@ footer .flinks { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0; font
 .md blockquote { margin: 16px 0; padding: 6px 18px; border-left: 3px solid var(--orange);
   background: var(--card); color: var(--ink-soft); border-radius: 0 8px 8px 0; }
 .md .mermaid { background: #fff; border: 1px solid var(--line-2); border-radius: 10px;
-  padding: 16px; margin: 18px 0; text-align: center; overflow-x: auto; }
+  padding: 18px; margin: 22px 0; text-align: center; overflow-x: auto; }
+/* Perbesar diagram: isi lebar wadah (sebelumnya mengecil ke ukuran natural) */
+.md .mermaid svg { width: 100%; height: auto; max-width: 900px; }
+.md > .mermaid { margin-inline: auto; }
+
+/* ---------- Codepair: kode ↔ diagram (side-by-side → tab) ------------- */
+.md .codepair { margin: 26px 0; border: 1px solid var(--line-2); border-radius: 12px;
+  overflow: hidden; background: var(--card); }
+.md .codepair > figcaption, .md .codepair .cp-cap {
+  font-family: var(--mono); font-size: .8rem; color: var(--muted);
+  padding: 9px 14px; border-bottom: 1px solid var(--line-2); background: var(--paper-2); }
+.cp-tabs { display: none; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line-2);
+  background: var(--paper-2); }
+.cp-tab { font-family: var(--mono); font-size: .78rem; cursor: pointer;
+  padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--line-2);
+  background: var(--card); color: var(--ink-soft); }
+.cp-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.cp-body { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+.cp-panel { min-width: 0; }
+.cp-panel.cp-code { border-right: 1px solid var(--line-2); }
+/* rapikan pre/mermaid di dalam panel: tanpa margin/border ganda */
+.cp-panel.cp-code pre { margin: 0; border-radius: 0; height: 100%; }
+.cp-panel.cp-diagram .mermaid { margin: 0; border: 0; border-radius: 0; height: 100%;
+  display: flex; align-items: center; justify-content: center; }
+.cp-panel.cp-diagram .mermaid svg { max-width: 100%; }
+
+/* Layar sempit / HP: tumpuk jadi tab toggle */
+@media (max-width: 820px) {
+  .cp-tabs { display: flex; }
+  .cp-body { display: block; }
+  .cp-panel { display: none; }
+  .cp-panel.active { display: block; }
+  .cp-panel.cp-code { border-right: 0; }
+}
 .spinner { color: var(--muted); padding: 60px 0; text-align: center; font-family: var(--mono); }
