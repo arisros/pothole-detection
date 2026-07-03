@@ -15,18 +15,30 @@ import copy
 
 import numpy as np
 
+from .augment import random_augment
 from .losses import SoftmaxCrossEntropy
-from .optim import SGDMomentum
+from .optim import Adam, SGDMomentum
 
 
 class Trainer:
-    def __init__(self, model, lr=0.01, momentum=0.9, batch_size=32, seed=42):
+    def __init__(self, model, lr=0.01, momentum=0.9, batch_size=32, seed=42,
+                 weight_decay=0.0, augment=False, aug_params=None,
+                 optimizer="sgd", cosine_lr=False):
         self.model = model
         self.batch_size = batch_size
+        self.augment = augment
+        # Kekuatan augmentasi daring (None -> pakai default random_augment).
+        self.aug_params = aug_params or {}
         self.loss_fn = SoftmaxCrossEntropy()
-        # Hanya lapisan berparameter yang diberi velocity.
+        # Hanya lapisan berparameter yang diberi optimizer state.
         param_layers = [l for l in model.layers if l.params]
-        self.optimizer = SGDMomentum(param_layers, lr=lr, momentum=momentum)
+        if optimizer == "adam":
+            self.optimizer = Adam(param_layers, lr=lr, weight_decay=weight_decay)
+        else:
+            self.optimizer = SGDMomentum(param_layers, lr=lr, momentum=momentum,
+                                         weight_decay=weight_decay)
+        self.base_lr = lr
+        self.cosine_lr = cosine_lr
         self.rng = np.random.default_rng(seed)
         self.history = {
             "train_loss": [], "train_acc": [],
@@ -43,6 +55,7 @@ class Trainer:
 
     def _evaluate(self, x, y):
         """Loss & akurasi rata-rata pada satu himpunan (tanpa update)."""
+        self.model.eval()  # dropout mati saat evaluasi
         total_loss, total_correct, n = 0.0, 0, x.shape[0]
         for start in range(0, n, self.batch_size):
             xb = x[start:start + self.batch_size]
@@ -65,8 +78,16 @@ class Trainer:
             verbose=True, restore_best=True):
         best_val_acc, best_snapshot, best_epoch = -1.0, None, 0
         for epoch in range(1, epochs + 1):
+            # Jadwal cosine: lr meluruh mulus dari base_lr -> ~0 sepanjang latih,
+            # menstabilkan epoch akhir (mengurangi val bouncing).
+            if self.cosine_lr:
+                self.optimizer.lr = 0.5 * self.base_lr * (
+                    1.0 + np.cos(np.pi * (epoch - 1) / max(1, epochs - 1)))
             running_loss, seen = 0.0, 0
+            self.model.train()  # dropout hidup saat latih
             for xb, yb in self._iterate_minibatches(x_train, y_train):
+                if self.augment:
+                    xb = random_augment(xb, self.rng, **self.aug_params)
                 scores = self.model.forward(xb)
                 loss = self.loss_fn.forward(scores, yb)
                 dscores = self.loss_fn.backward()

@@ -26,6 +26,9 @@ class Layer:
     def __init__(self):
         self.params: dict[str, np.ndarray] = {}
         self.grads: dict[str, np.ndarray] = {}
+        # Mode latih/evaluasi. Sebagian besar lapisan mengabaikannya; hanya
+        # Dropout berperilaku berbeda antara training dan inferensi.
+        self.training: bool = True
 
     def forward(self, x):  # pragma: no cover - antarmuka
         raise NotImplementedError
@@ -160,6 +163,39 @@ class ReLU(Layer):
         return x * self._mask
 
     def backward(self, dout):
+        return dout * self._mask
+
+
+class Dropout(Layer):
+    """Dropout terbalik (inverted dropout) — regularisasi anti-overfitting.
+
+    Saat latih: setiap unit dimatikan (di-nol-kan) dengan peluang p, sisanya
+    diskalakan 1/(1-p) agar ekspektasi keluaran tetap sama. Saat evaluasi:
+    lapisan menjadi identitas (tanpa penskalaan tambahan).
+
+    Forward (training):  mask ~ Bernoulli(1-p)/(1-p);  y = x * mask
+    Forward (eval):      y = x
+    Backward:            dx = dout * mask
+    """
+
+    def __init__(self, p=0.5, seed=None):
+        super().__init__()
+        self.p = float(p)
+        self.rng = np.random.default_rng(seed)
+        self._mask = None
+
+    def forward(self, x):
+        if not self.training or self.p <= 0.0:
+            self._mask = None
+            return x
+        keep = 1.0 - self.p
+        # Skala 1/keep sekaligus (inverted dropout) supaya inferensi tak perlu ubah.
+        self._mask = (self.rng.random(x.shape) < keep) / keep
+        return x * self._mask
+
+    def backward(self, dout):
+        if self._mask is None:
+            return dout
         return dout * self._mask
 
 

@@ -32,9 +32,13 @@ def sanity_overfit(x_train, y_train):
     """Latih pada 32 sampel saja; harus mencapai akurasi train tinggi."""
     print("\n[Sanity check] overfit batch kecil ...")
     idx = np.arange(min(32, len(y_train)))
-    m = LeNet5(seed=config.SEED)
+    # Tanpa regularisasi/augmentasi: ini murni uji kebenaran backprop —
+    # model HARUS mampu menghafal 32 sampel.
+    m = LeNet5(seed=config.SEED, dropout_p=0.0,
+               in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE)
     t = Trainer(m, lr=config.LEARNING_RATE, momentum=config.MOMENTUM,
-                batch_size=16, seed=config.SEED)
+                batch_size=16, seed=config.SEED,
+                weight_decay=0.0, augment=False, optimizer=config.OPTIMIZER)
     t.fit(x_train[idx], y_train[idx], epochs=40, verbose=False)
     acc = float(np.mean(m.predict(x_train[idx]) == y_train[idx]))
     print(f"  akurasi overfit = {acc:.3f}  "
@@ -63,17 +67,28 @@ def main():
 
     sanity_overfit(x_train, y_train)
 
-    print("\n[Pelatihan penuh]")
-    model = LeNet5(seed=config.SEED)
-    trainer = Trainer(model, lr=config.LEARNING_RATE, momentum=config.MOMENTUM,
-                      batch_size=config.BATCH_SIZE, seed=config.SEED)
-    history = trainer.fit(x_train, y_train, x_val, y_val,
-                          epochs=config.EPOCHS, verbose=True)
-
     os.makedirs(config.EXPERIMENTS_DIR, exist_ok=True)
-    model.save(config.WEIGHTS_NPZ)
-    save_history(history, config.HISTORY_CSV)
-    print(f"\nBobot  -> {config.WEIGHTS_NPZ}")
+    seeds = getattr(config, "ENSEMBLE_SEEDS", [config.SEED]) or [config.SEED]
+    first_history = None
+    for i, seed in enumerate(seeds):
+        print(f"\n[Pelatihan penuh] model {i + 1}/{len(seeds)} (seed={seed})")
+        model = LeNet5(seed=seed, dropout_p=config.DROPOUT_P,
+                       in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE)
+        trainer = Trainer(model, lr=config.LEARNING_RATE, momentum=config.MOMENTUM,
+                          batch_size=config.BATCH_SIZE, seed=seed,
+                          weight_decay=config.WEIGHT_DECAY,
+                          augment=config.ONLINE_AUGMENT,
+                          optimizer=config.OPTIMIZER, cosine_lr=config.COSINE_LR)
+        history = trainer.fit(x_train, y_train, x_val, y_val,
+                              epochs=config.EPOCHS, verbose=True)
+        # Simpan bobot per-seed (untuk ensembel) + salinan utama (seed pertama).
+        model.save(config.WEIGHTS_NPZ.replace(".npz", f"_seed{seed}.npz"))
+        if i == 0:
+            model.save(config.WEIGHTS_NPZ)
+            first_history = history
+
+    save_history(first_history, config.HISTORY_CSV)
+    print(f"\nBobot  -> {config.WEIGHTS_NPZ} (+ per-seed untuk ensembel)")
     print(f"History-> {config.HISTORY_CSV}")
     return 0
 
