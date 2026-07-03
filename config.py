@@ -52,7 +52,7 @@ AUGMENT = False
 ONLINE_AUGMENT = True
 
 # ---------------------------------------------------------------------------
-# Arsitektur LeNet-5 (disesuaikan untuk 32x32x1, 2 kelas)
+# Arsitektur (varian LeNet-5 modern untuk RGB 48x48, 2 kelas)
 # ---------------------------------------------------------------------------
 CONV1_FILTERS = 6
 CONV2_FILTERS = 16
@@ -78,8 +78,6 @@ ENSEMBLE_SEEDS = [42, 7, 123]   # ensembel: rata-rata softmax beberapa model
 # ---------------------------------------------------------------------------
 WEIGHT_DECAY = 1e-4      # L2 weight decay (hanya pada bobot W, bukan bias)
 DROPOUT_P = 0.3          # peluang dropout pada lapisan fully-connected
-                        # Konfigurasi pemenang sweep (RGB 48px + Adam + cosine):
-                        # test 92.5% / F1 93.1% pada satu model (vs 79% grayscale-32).
 
 # Batas jumlah sampel per kelas saat memuat (None = pakai semua).
 # Berguna menjaga pelatihan murni-NumPy tetap selesai dalam waktu wajar.
