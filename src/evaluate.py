@@ -24,6 +24,44 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 
+def _new_model():
+    """Bangun LeNet5 sesuai konfigurasi input aktif (channel & ukuran)."""
+    return LeNet5(seed=config.SEED, in_channels=config.IMG_CHANNELS,
+                  img_size=config.IMG_SIZE)
+
+
+def tta_proba(model, x, batch_size=64):
+    """Test-time augmentation: rata-rata softmax citra asli + flip horizontal.
+
+    Prediksi seharusnya invarian terhadap cermin kiri-kanan, jadi merata-ratakan
+    keduanya meredam derajat dan biasanya menaikkan akurasi sedikit.
+    """
+    p = model.predict_proba(x, batch_size)
+    p_flip = model.predict_proba(x[:, :, :, ::-1], batch_size)
+    return 0.5 * (p + p_flip)
+
+
+def ensemble_weight_paths():
+    """Kembalikan daftar berkas bobot ensembel bila ada, else [WEIGHTS_NPZ]."""
+    paths = []
+    for seed in getattr(config, "ENSEMBLE_SEEDS", []):
+        p = config.WEIGHTS_NPZ.replace(".npz", f"_seed{seed}.npz")
+        if os.path.exists(p):
+            paths.append(p)
+    return paths or [config.WEIGHTS_NPZ]
+
+
+def ensemble_proba(x):
+    """Rata-rata softmax (dengan TTA) di seluruh model ensembel."""
+    paths = ensemble_weight_paths()
+    acc = None
+    for p in paths:
+        model = _new_model().load(p)
+        pr = tta_proba(model, x)
+        acc = pr if acc is None else acc + pr
+    return acc / len(paths)
+
+
 def load_history(path):
     epochs, tl, ta, vl, va = [], [], [], [], []
     with open(path) as f:
@@ -74,7 +112,14 @@ def plot_samples(model, x_test, y_test, path_out, n=8):
     preds = np.argmax(probs, axis=1)
     fig, axes = plt.subplots(2, 4, figsize=(11, 5.5))
     for ax, idx, pred, prob in zip(axes.ravel(), idxs, preds, probs):
-        ax.imshow(x_test[idx, 0], cmap="gray"); ax.set_xticks([]); ax.set_yticks([])
+        img = x_test[idx]
+        if img.shape[0] == 1:
+            ax.imshow(img[0], cmap="gray")
+        else:  # RGB: (C,H,W)->(H,W,C), skala balik ke [0,1] untuk tampilan
+            disp = np.transpose(img, (1, 2, 0))
+            disp = (disp - disp.min()) / (disp.ptp() + 1e-8)
+            ax.imshow(disp)
+        ax.set_xticks([]); ax.set_yticks([])
         true = y_test[idx]
         ok = pred == true
         ax.set_title(
@@ -89,8 +134,14 @@ def main():
     data = np.load(config.DATASET_NPZ)
     x_test, y_test = data["x_test"], data["y_test"]
 
-    model = LeNet5(seed=config.SEED).load(config.WEIGHTS_NPZ)
-    y_pred = model.predict(x_test)
+    paths = ensemble_weight_paths()
+    probs = ensemble_proba(x_test)
+    y_pred = np.argmax(probs, axis=1)
+    print(f"Model: ensembel {len(paths)} bobot + TTA (flip)"
+          if len(paths) > 1 else "Model: tunggal + TTA (flip)")
+
+    # Model tunggal (untuk figur feature-map/contoh prediksi).
+    model = _new_model().load(paths[0])
 
     m = binary_metrics(y_test, y_pred, positive=1)
     cm = confusion_matrix(y_test, y_pred, config.NUM_CLASSES)
