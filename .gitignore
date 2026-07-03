@@ -5,9 +5,12 @@ __pycache__/
 # Data mentah & artefak besar (dapat dihasilkan ulang via `make all`)
 data/raw/
 data/processed/*.npz
-experiments/weights.npz
-experiments/weights_seed*.npz
 experiments/*.log
+# Bobot model sengaja DI-COMMIT (bukan di-ignore) agar mesin lain bisa langsung
+# inferensi/deploy tanpa latih ulang. norm_stats.json juga di-commit untuk
+# normalisasi saat inferensi. (dataset.npz tetap di-ignore & bisa di-regenerate.)
+# experiments/weights.npz
+# experiments/weights_seed*.npz
 
 # OS
 .DS_Store
