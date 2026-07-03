@@ -16,7 +16,8 @@ mkdir -p "$CTX/app" "$CTX/www/content" "$CTX/www/figures" "$CTX/www/samples"
 cp "$ROOT/web/server.py" "$CTX/app/"
 cp -r "$ROOT/src/cnn" "$CTX/app/cnn"
 rm -rf "$CTX/app/cnn/__pycache__"
-cp "$ROOT/experiments/weights.npz" "$CTX/app/weights.npz"
+# Bobot: weights.npz (utama) + weights_seed*.npz (ensembel) bila ada.
+cp "$ROOT"/experiments/weights*.npz "$CTX/app/"
 cp "$ROOT/data/processed/norm_stats.json" "$CTX/app/norm_stats.json"
 
 # --- Statis (hanya file top-level: html/css/js; folder preview lokal diabaikan) ---
