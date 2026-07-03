@@ -72,12 +72,12 @@ sepeda motor yang jumlahnya dominan.
 Proses inventarisasi kerusakan jalan secara konvensional dilakukan melalui survei
 manual oleh petugas. Cara ini memerlukan tenaga, waktu, dan biaya yang besar,
 serta rentan terhadap subjektivitas penilai. Seiring berkembangnya teknologi
-*computer vision* dan *deep learning*, identifikasi kerusakan jalan dapat
+*computer vision* (yakni komputer "melihat" dan memahami isi gambar) dan *deep learning* (cabang AI yang belajar sendiri dari banyak contoh), identifikasi kerusakan jalan dapat
 diotomatisasi melalui analisis citra: kamera merekam permukaan jalan, lalu sebuah
 model klasifikasi menentukan apakah suatu citra mengandung lubang atau tidak.
 
 *Convolutional Neural Network* (CNN) adalah arsitektur *deep learning* yang sangat
-efektif untuk data bertopologi grid seperti citra. CNN mampu **belajar fitur
+efektif untuk data bertopologi grid (data yang tersusun kotak-kotak rapi seperti piksel pada foto) seperti citra. CNN mampu **belajar fitur
 secara otomatis** langsung dari data, menggantikan ekstraksi fitur manual yang
 selama ini menjadi tahap tersulit dalam pengolahan citra klasik. Keunggulan
 inilah yang membuat CNN menjadi metode dominan pada tugas klasifikasi citra,
@@ -88,7 +88,7 @@ Sebagian besar implementasi CNN dewasa ini mengandalkan pustaka tingkat tinggi
 fungsi siap pakai — sering disebut sebagai "kotak hitam" (*black box*). Bagi
 tujuan pembelajaran, pendekatan ini menyisakan kesenjangan pemahaman: bagaimana
 sebenarnya konvolusi dihitung? Bagaimana gradien mengalir mundur melalui lapisan
-*pooling*? Mengapa *softmax* dan *cross-entropy* selalu dipasangkan?
+*pooling*? Mengapa *softmax* dan *cross-entropy* selalu dipasangkan? (istilah *softmax* dan *cross-entropy* dijelaskan di BAB II)
 
 Penelitian ini menjawab kesenjangan tersebut dengan **mengimplementasikan inti
 CNN dari nol** menggunakan NumPy, tanpa fasilitas diferensiasi otomatis. Setiap
@@ -240,6 +240,8 @@ satu filter *f* dan posisi keluaran (*i*, *j*):
 
 $$O[f,i,j] = b_f + \sum_{c}\sum_{m}\sum_{n} X[c,\,iS+m,\,jS+n]\cdot W[f,c,m,n]$$
 
+> 💡 **Untuk awam:** Bayangkan sebuah "stempel" kecil (W) yang digeser ke seluruh bagian foto. Di tiap posisi, stempel menempel pada sepetak piksel (X), lalu tiap angka dikalikan dan semuanya dijumlahkan (itulah arti tanda Σ, "jumlahkan semua"), ditambah sedikit angka penyesuai (b). Hasilnya (O) adalah satu nilai yang menyatakan seberapa cocok pola di petak itu dengan stempel — misalnya seberapa jelas ada garis tepi lubang.
+
 Ukuran *feature map* keluaran dihitung dengan rumus:
 
 $$\text{output} = \frac{W - N + 2P}{S} + 1$$
@@ -247,6 +249,8 @@ $$\text{output} = \frac{W - N + 2P}{S} + 1$$
 dengan W = tinggi/lebar masukan, N = ukuran kernel, P = *padding*, dan S =
 *stride*. Terdapat tiga jenis *padding*: *valid* (tanpa padding), *same* (ukuran
 keluaran sama dengan masukan), dan *full*.
+
+> 💡 **Untuk awam:** Rumus ini cuma menghitung ukuran gambar setelah "stempel" selesai digeser ke seluruh permukaan. Karena stempel tidak bisa keluar dari tepi foto, beberapa baris piksel di pinggir tak terpakai, sehingga gambar hasilnya sedikit lebih kecil dari aslinya. Itu sebabnya di tiap lapisan gambar makin menyusut, mirip foto yang dipangkas pinggirnya berkali-kali.
 
 Penapis yang berbeda menghasilkan *feature map* yang berbeda — misalnya penapis
 Sobel mendeteksi tepi, penapis *box blur* memperhalus. Pada CNN, nilai penapis
@@ -258,6 +262,8 @@ Sobel mendeteksi tepi, penapis *box blur* memperhalus. Pada CNN, nilai penapis
 positif:
 
 $$f(u) = \max(0, u)$$
+
+> 💡 **Untuk awam:** Ini seperti keran satu arah: kalau angka yang masuk bernilai negatif, keran menutup dan keluarannya jadi 0; kalau positif, angka dibiarkan lewat apa adanya. Aturan sederhana "buang yang negatif, loloskan yang positif" inilah yang membuat jaringan mampu menangkap pola yang rumit.
 
 ReLU memberi sifat non-linier yang memungkinkan jaringan memodelkan hubungan
 kompleks, sekaligus mempercepat pelatihan dibanding sigmoid karena tidak
@@ -278,6 +284,8 @@ lapisan terhubung penuh (MLP). Lapisan terakhir menghasilkan vektor berdimensi K
 
 $$\sigma(\vec{z})_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}$$
 
+> 💡 **Untuk awam:** Softmax mengubah skor mentah tiap kelas menjadi persentase keyakinan yang totalnya pas 100%. Mirip penghitungan suara pemilu: tiap kandidat (kelas) mendapat porsi suara, dan semua porsi kalau dijumlahkan pasti 100%. Jadi model bisa berkata, misalnya, "80% yakin berlubang, 20% normal".
+
 Keluaran *softmax* bernilai 0–1 dan berjumlah satu, sehingga dapat ditafsirkan
 sebagai distribusi peluang antar kelas. Metode pembelajaran yang dipakai adalah
 *supervised learning* dengan mekanisme *backpropagation*.
@@ -296,6 +304,8 @@ Aturan rantai menyatakan bahwa turunan loss terhadap keluaran lapisan ke-*k*
 dapat diperoleh dari turunan loss terhadap keluaran lapisan ke-(*k*+1):
 
 $$\frac{\partial L}{\partial h_k} = \frac{\partial L}{\partial h_{k+1}} \cdot \frac{\partial h_{k+1}}{\partial h_k}$$
+
+> 💡 **Untuk awam:** "Loss" (L) adalah ukuran seberapa besar model salah menebak. Untuk memperbaiki diri, model perlu tahu tiap lapisan menyumbang berapa banyak ke kesalahan itu — inilah gradien (lambang ∂ berarti "seberapa berpengaruh", dan δ adalah kesalahan yang datang dari lapisan sesudahnya). Rumus ini menghitungnya secara mundur, lapis demi lapis dari belakang ke depan, seperti efek domino yang jatuh berantai atau keterlambatan kereta yang merembet ke stasiun-stasiun sebelumnya.
 
 Inilah inti efisiensi *backpropagation*: alih-alih menghitung ulang turunan dari
 awal untuk tiap parameter, gradien "diwariskan" mundur lapis demi lapis. Setiap
@@ -440,6 +450,8 @@ distandardisasi:
 
 $$x' = \frac{x - \mu}{\sigma}$$
 
+> 💡 **Untuk awam:** Rumus ini menyetel semua foto ke "standar" yang sama sebelum dipelajari. μ adalah tingkat terang rata-rata semua foto, dan σ adalah seberapa lebar variasi terang-gelapnya. Dengan mengurangi rata-rata lalu membaginya, setiap foto seolah dipotret pada pencahayaan yang seragam, sehingga model tidak tertipu hanya karena satu foto kebetulan lebih terang atau lebih gelap.
+
 dengan μ dan σ (satu skalar global, dipakai bersama untuk ketiga kanal) dihitung
 dari data latih. Diperoleh **μ = 0,4728** dan **σ = 0,2172**. Standardisasi
 mempercepat konvergensi karena menyamakan skala fitur.
@@ -516,6 +528,15 @@ Bagian inti penelitian: setiap operasi diturunkan secara matematis lalu dikodeka
 manual. *Forward* menghitung keluaran; *backward* menghitung gradien loss
 terhadap masukan dan parameter memakai aturan rantai.
 
+> 📐 **Cara membaca rumus di bab ini:** tidak perlu latar matematika untuk
+> mengikuti — cukup terjemahkan simbolnya. **∂L/∂W** dibaca "seberapa besar
+> kesalahan (L) berubah bila bobot W digeser sedikit", yaitu arah untuk memperbaiki
+> W. **Σ** berarti "jumlahkan semua angka dalam daftar". **ᵀ** berarti "tukar baris
+> jadi kolom" (tabel diputar). **δ** dan **∇** keduanya adalah gradien — sinyal
+> koreksi yang mengalir mundur dari hasil ke tiap bagian model. **𝒩** berarti angka
+> acak yang diambil dari sebaran berbentuk lonceng (banyak di tengah, jarang di tepi).
+> Rincian tiap istilah ada di KAMUS ISTILAH (LAMPIRAN B).
+
 ### 3.6.1 Konvolusi
 
 Operasi maju seperti Persamaan pada 2.3.1. Untuk efisiensi, konvolusi
@@ -527,12 +548,16 @@ $$\frac{\partial L}{\partial W} = \delta_{\text{col}} \cdot X_{\text{col}}^{\top
 \frac{\partial L}{\partial b_f} = \sum_{i,j}\delta[f,i,j],\quad
 \frac{\partial L}{\partial X} = \text{col2im}(W_{\text{col}}^{\top}\,\delta_{\text{col}})$$
 
+> 💡 **Untuk awam:** Setelah tahu model salah, tiap angka di dalam "stempel" (bobot W) diberi tahu seberapa besar ia ikut menyebabkan kesalahan tadi, lalu digeser sedikit ke arah yang benar. Yang paling berkontribusi pada kesalahan dikoreksi paling banyak, yang tak bersalah nyaris tak diubah. Ini seperti evaluasi tim: tiap anggota diberi masukan sesuai porsi kesalahannya, lalu memperbaiki diri.
+
 Fungsi `col2im` mengakumulasikan kontribusi gradien tiap piksel yang muncul di
 banyak jendela.
 
 ### 3.6.2 ReLU
 
 $$f(u)=\max(0,u), \qquad \frac{\partial L}{\partial u} = \delta\cdot\mathbb{1}[u>0]$$
+
+> 💡 **Untuk awam:** Simbol 𝟙[u>0] adalah sebuah saklar: bernilai 1 kalau tadi keran ReLU terbuka (angkanya positif), dan 0 kalau tertutup. Artinya hanya bagian gambar yang tadi "menyala" saat langkah maju yang ikut dikoreksi saat belajar; bagian yang tadi mati diabaikan. Umpan balik hanya dikirim ke jalur yang memang aktif.
 
 ### 3.6.3 Max Pooling
 
@@ -546,6 +571,8 @@ $$y = xW + b,\qquad
 \frac{\partial L}{\partial W} = x^{\top}\delta,\quad
 \frac{\partial L}{\partial b} = \sum\delta,\quad
 \frac{\partial L}{\partial x} = \delta W^{\top}$$
+
+> 💡 **Untuk awam:** Baris pertama (y = xW + b) menggabungkan semua ciri (x) dengan bobot kepentingannya (W) lalu menjumlahkannya — mirip menghitung nilai akhir dari banyak mata pelajaran yang punya bobot berbeda-beda. Tiga rumus di bawahnya hanyalah petunjuk arah perbaikan: seberapa harus mengubah bobot W, angka tambahan b, dan seberapa besar kesalahan diteruskan mundur ke x.
 
 ### 3.6.5 Softmax + Cross-Entropy
 
@@ -561,12 +588,16 @@ $$\frac{\partial L}{\partial z_i} = p_i - y_i$$
 Inilah alasan keduanya selalu dipasangkan. Vektor (p − y) menjadi titik awal
 aliran gradien mundur.
 
+> 💡 **Untuk awam:** Cross-entropy mengukur "seberapa kaget" model terhadap jawaban yang benar — makin pede tapi ternyata salah, makin besar hukumannya. Hebatnya, hasil akhirnya sangat sederhana: (p − y), yaitu selisih antara tebakan model (p) dan jawaban sebenarnya (y). Kalau tebakan sudah tepat, selisihnya nol dan tak ada yang perlu diperbaiki.
+
 ### 3.6.6 Inisialisasi Bobot
 
 $$\text{He (ReLU)}:\; W\sim\mathcal{N}\!\Big(0,\tfrac{2}{n_{in}}\Big), \qquad
 \text{Xavier}:\; W\sim\mathcal{N}\!\Big(0,\tfrac{1}{n_{in}}\Big)$$
 
 Inisialisasi He dipakai pada lapisan ber-ReLU, Xavier pada lapisan keluaran.
+
+> 💡 **Untuk awam:** Sebelum mulai belajar, bobot diisi angka-angka acak yang diambil dari sebaran berbentuk lonceng (kebanyakan dekat nol, sedikit yang jauh). Tujuannya menyetel "volume awal" yang pas: kalau terlalu keras jaringan bisa meledak, kalau terlalu pelan tak ada sinyal yang terdengar. He dan Xavier hanyalah dua resep untuk menentukan lebar sebaran acak itu agar cocok dengan jenis lapisannya.
 
 ### 3.6.7 Aliran Gradien Mundur
 
@@ -589,6 +620,8 @@ dan kedua (v) dari gradien:
 $$m \leftarrow \beta_1 m + (1-\beta_1)\nabla,\quad
 v \leftarrow \beta_2 v + (1-\beta_2)\nabla^2,\quad
 \theta \leftarrow \theta - \eta\,\frac{\hat m}{\sqrt{\hat v}+\varepsilon}$$
+
+> 💡 **Untuk awam:** ∇ menunjuk arah menuruni "bukit kesalahan" menuju titik terbaik. Adam tidak asal melangkah: ia mengingat rata-rata arah langkah-langkah sebelumnya (m) dan seberapa besar goyangannya (v), lalu memakai keduanya agar langkahnya mantap dan tidak terpeleset ke kiri-kanan. Mirip pesepeda menuruni bukit yang menjaga keseimbangan berdasarkan gerak beberapa saat terakhir, bukan menyentak tiap detik.
 
 Laju pembelajaran meluruh mengikuti **jadwal cosine** sepanjang pelatihan, dan
 regularisasi **L2 weight decay** (hanya pada bobot W, bukan bias) ditambahkan pada
@@ -690,6 +723,8 @@ $$\frac{\partial L}{\partial\theta} \approx
 Galat relatif < 10⁻⁵ menandakan implementasi benar. Hasil aktual jauh lebih kecil
 (Tabel 4.1), membuktikan seluruh *backward* diturunkan dengan benar.
 
+> 💡 **Untuk awam:** "Galat relatif" di sini adalah selisih antara hitungan rumus yang kami tulis sendiri dengan hitungan pembanding yang dijamin benar. Angka sekecil `1e-9` (0,000000001) berarti kedua hasil praktis identik — seperti dua timbangan yang selisihnya kurang dari sehelai rambut. Ini menjadi bukti bahwa kode matematis yang kami tulis manual sudah benar.
+
 **Tabel 4.1. Hasil gradient checking**
 
 | Komponen | Galat relatif | Status |
@@ -755,6 +790,8 @@ dilihat. Hasil metrik dirangkum pada Tabel 4.3.
 | Presisi | **91,53%** |
 | Recall | **98,18%** |
 | F1-score | **94,74%** |
+
+> 💡 **Untuk awam:** Arti tiap angka di atas: **Akurasi** = dari semua foto, berapa persen yang ditebak benar. **Presisi** = dari semua foto yang model bilang "berlubang", berapa yang benar-benar berlubang (mengukur seberapa jarang model salah alarm). **Recall** = dari semua lubang yang sebenarnya ada, berapa yang berhasil ditemukan model (mengukur seberapa jarang lubang terlewat). **F1-score** = angka penyeimbang antara presisi dan recall; makin dekat ke 100%, makin baik keseluruhannya.
 
 *Confusion matrix* pengujian ditunjukkan pada Tabel 4.4 dan Gambar 4.2.
 
@@ -903,12 +940,41 @@ diagram alurnya. Di layar lebar, **kode dan diagram tampil berdampingan**; di
 layar sempit keduanya menjadi **tab** (Kode / Diagram). Semua potongan diambil
 apa adanya dari repositori (`src/cnn/`).
 
+> 💡 **Untuk pembaca awam:** sebelum masuk ke potongan kode, bayangkan beberapa
+> hal ini. Pertama, **tensor `(N, C, H, W)`** hanyalah tumpukan angka yang rapi:
+> `N` = berapa banyak gambar dalam satu tumpukan, `C` = jumlah kanal warna tiap
+> gambar (3 untuk merah-hijau-biru, 1 untuk hitam-putih), `H` = tinggi gambar
+> dalam titik (piksel), dan `W` = lebar gambar. Jadi `(32, 3, 48, 48)` berarti
+> 32 foto berwarna berukuran 48×48 titik yang ditumpuk jadi satu.
+>
+> Kedua, model bekerja dua arah. **Forward (jalan maju)** adalah saat gambar
+> mengalir dari awal ke akhir jaringan sampai keluar sebuah tebakan — "berlubang"
+> atau "normal", persis seperti murid mengerjakan soal dari atas ke bawah lalu
+> menuliskan jawaban. **Backward (jalan mundur)** adalah saat kita membandingkan
+> tebakan itu dengan jawaban benar, lalu menelusuri balik untuk menghitung bagian
+> mana yang paling keliru — seperti mencocokkan jawaban dengan kunci lalu menandai
+> di langkah mana kesalahan bermula.
+>
+> Ketiga, hasil dari jalan mundur itu disebut **gradien**: sebuah penunjuk yang
+> memberi tahu ke arah mana dan seberapa besar tiap angka di dalam model harus
+> digeser agar tebakan berikutnya lebih tepat — ibarat kompas perbaikan.
+>
+> Keempat, perhatikan satu pola yang berulang di hampir semua kode ini: **jalan
+> maju menyimpan catatan (disebut *cache*) → jalan mundur memakai catatan itu.**
+> Saat forward, model menyimpan angka-angka antara yang sempat dihitung; saat
+> backward, angka simpanan itu dipakai ulang supaya koreksi bisa dihitung tanpa
+> mengulang pekerjaan dari nol — seperti menyimpan coretan langkah pengerjaan soal
+> agar mudah menelusuri di mana salahnya. Istilah-istilah lain yang muncul di sini
+> dijelaskan satu per satu di **KAMUS ISTILAH (LAMPIRAN B)**.
+
 ## A.1 Konvolusi via im2col — `Conv2D.forward`
 
 Konvolusi naif berupa empat perulangan bersarang (filter × kanal × baris × kolom)
 sangat lambat di Python. Trik **im2col** mengubah tiap jendela konvolusi menjadi
 satu kolom matriks, sehingga seluruh konvolusi menjadi **satu perkalian matriks**
 `w_col @ x_col`. Berikut jalur majunya:
+
+> 💡 **Untuk awam:** Bayangkan sebuah stempel kecil yang digeser menyapu seluruh permukaan foto, satu petak demi satu petak. Alih-alih menghitung tiap petak satu per satu (lambat), trik im2col menyalin isi tiap petak menjadi satu baris pada sebuah daftar besar, lalu seluruh perhitungan dilakukan sekali secara massal seperti mengalikan satu tabel raksasa. Hasilnya sama, tetapi jauh lebih cepat.
 
 :::pair Gambar A.1 — Forward konvolusi (`src/cnn/layers.py`)
 ```python
@@ -963,6 +1029,8 @@ flowchart TB
 ## A.2 im2col & col2im
 
 Konvolusi naif berupa empat perulangan bersarang sangat lambat di Python, sehingga `im2col` mengubah tiap jendela konvolusi menjadi satu kolom matriks agar seluruh operasi menjadi satu perkalian matriks. `col2im` adalah kebalikannya: menebar (dan menjumlahkan) gradien kolom kembali ke bentuk citra saat backward.
+
+> 💡 **Untuk awam:** im2col ibarat menggunting tiap "jendela" pada foto lalu menempelkannya berjajar menjadi satu kolom rapi, supaya mesin bisa menghitung semuanya sekaligus. col2im adalah langkah baliknya: menempelkan potongan-potongan itu kembali ke posisi asalnya di foto. Karena satu titik foto bisa dipakai oleh beberapa jendela, saat dikembalikan nilainya dijumlahkan, bukan ditimpa.
 
 :::pair Gambar A.2 — Alur im2col dan col2im (`src/cnn/tensor_utils.py`)
 ```python
@@ -1037,6 +1105,8 @@ flowchart TB
 ## A.3 Konvolusi backward
 
 `Conv2D.backward` menurunkan tiga gradien dari `dout`: terhadap bias (`db`), bobot (`dW`), dan masukan (`dX`). Karena forward memakai perkalian matriks `W_col @ X_col`, backward-nya juga cukup memakai transpos dan perkalian matriks, ditutup `col2im` untuk mengembalikan `dX` ke bentuk citra.
+
+> 💡 **Untuk awam:** Bagian ini menghitung, untuk tiap "kenop pengatur" (bobot) di dalam model, seberapa besar dan ke arah mana ia harus diputar agar tebakan model jadi lebih benar. Ibarat mengoreksi resep masakan: setelah mencicipi, kita tahu garam perlu ditambah sedikit dan gula dikurangi. Angka-angka inilah yang nanti dipakai untuk memperbaiki model langkah demi langkah.
 
 :::pair Gambar A.3 — Aliran gradien Conv2D.backward (`src/cnn/layers.py`)
 ```python
@@ -1183,6 +1253,8 @@ flowchart TB
 
 Flatten menjembatani bagian konvolusi dan bagian terhubung-penuh: mengubah tensor 4-D menjadi matriks 2-D. Karena hanya menata ulang bentuk, backward-nya cukup mengembalikan bentuk semula.
 
+> 💡 **Untuk awam:** Flatten seperti menuang isi beberapa kotak bersusun menjadi satu barisan panjang yang berjajar rapi. Tidak ada isi yang ditambah atau dibuang — hanya susunannya yang dirapikan agar bisa diproses lapisan berikutnya. Saat menghitung mundur, barisan panjang itu tinggal dituang kembali ke kotak-kotak semula.
+
 :::pair Gambar A.6 — Reshape maju-mundur tanpa mengubah nilai (`src/cnn/layers.py`)
 ```python
 class Flatten(Layer):
@@ -1219,6 +1291,8 @@ flowchart TB
 ## A.7 Dense (lapisan terhubung penuh)
 
 Dense adalah perkalian matriks klasik `y = xW + b`. Ia menyimpan masukan `x` saat forward, lalu memakainya untuk menghitung gradien bobot `dW`, bias `db`, dan gradien masukan `dx` saat backward.
+
+> 💡 **Untuk awam:** Lapisan ini bekerja seperti menghitung nilai akhir berbobot: tiap fitur dikalikan dengan bobot kepentingannya, lalu semuanya dijumlahkan menjadi satu skor. Fitur yang dianggap penting diberi bobot besar, yang kurang penting diberi bobot kecil. Dari skor inilah model akhirnya memutuskan "normal" atau "berlubang".
 
 :::pair Gambar A.7 — Forward y=xW+b dan tiga gradien backward (`src/cnn/layers.py`)
 ```python
@@ -1356,6 +1430,8 @@ flowchart TB
 
 Inisialisasi yang baik menjaga varians aktivasi stabil antar lapisan agar sinyal tidak meledak atau menghilang. He dipakai untuk ReLU, Xavier untuk lapisan linier/softmax; keduanya menyekala simpangan baku bobot terhadap fan-in.
 
+> 💡 **Untuk awam:** Sebelum model belajar, semua kenop pengaturnya (bobot) diisi dengan tebakan acak sebagai titik awal. Tetapi tebakan acak itu tidak asal — takarannya disetel hati-hati agar sinyal yang mengalir di jaringan tidak "meledak" jadi terlalu besar atau "menghilang" jadi terlalu kecil. Seperti menyetel volume awal radio agar tidak langsung memekakkan telinga atau justru tak terdengar.
+
 :::pair Gambar A.10 — Dua skema inisialisasi bobot Gauss berdasarkan fan-in (`src/cnn/init.py`)
 ```python
 def he_normal(shape, fan_in, rng):
@@ -1393,6 +1469,8 @@ flowchart TB
 ## A.11 Perakitan LeNet-5
 
 Kelas `LeNet5` merakit seluruh lapisan (convolution, pooling, flatten, dense, dropout) menjadi satu daftar berurutan, lalu menjalankan forward/backward dengan menelusuri daftar itu. Dimensi masukan RGB 3×48×48; `flat_dim` dihitung dinamis dari `img_size` agar mendukung ukuran selain 32.
+
+> 💡 **Untuk awam:** Bagian ini merangkai semua lapisan tadi menjadi satu jalur berurutan, seperti menyusun gerbong-gerbong menjadi satu rangkaian kereta. Saat menebak, data berjalan maju menyusuri jalur dari awal ke akhir (forward); saat belajar dari kesalahan, koreksi berjalan mundur menyusuri jalur yang sama dari akhir ke awal (backward).
 
 :::pair Gambar A.11 — Perakitan lapisan & jalur forward/backward (`src/cnn/model.py`)
 ```python
@@ -1531,6 +1609,8 @@ flowchart TB
 ## A.13 Adam
 
 `Adam` menyimpan estimasi momen pertama (`m`, rata-rata gradien) dan momen kedua (`v`, rata-rata kuadrat gradien), menerapkan koreksi bias, lalu mengambil langkah adaptif per-parameter. Weight decay L2 hanya pada bobot `W`.
+
+> 💡 **Untuk awam:** Adam ibarat bola yang menuruni bukit menuju titik terendah (jawaban terbaik), tetapi bola ini punya ingatan: ia mengingat arah dan kecepatan geraknya barusan. Berkat ingatan itu ia tidak mudah goyah oleh tonjolan kecil di jalan dan tidak gampang nyangkut di cekungan dangkal, sehingga meluncur lebih mulus dan cepat ke tujuan.
 
 :::pair Gambar A.13 — Langkah pembaruan Adam dengan koreksi bias (`src/cnn/optim.py`)
 ```python
@@ -1810,6 +1890,97 @@ flowchart TB
 - **`acc = pr if acc is None else acc + pr`** — akumulasi berjalan; inisialisasi pada iterasi pertama, lalu jumlahkan probabilitas TTA tiap model.
 - **`return acc / len(paths)`** — bagi dengan jumlah model untuk memperoleh rata-rata softmax ensembel; `np.argmax` atasnya (di `main`) menghasilkan label akhir.
 
+
+---
+
+# LAMPIRAN B — KAMUS ISTILAH
+
+> 💡 **Untuk pembaca awam:** kamus ini menerjemahkan istilah teknis ke bahasa
+> sehari-hari. Setiap entri berisi satu kalimat definisi ditambah satu analogi.
+> Anda tidak perlu membaca berurutan — pakai saja sebagai rujukan saat menemui
+> istilah asing di dokumen lain atau di makalah.
+
+**Tensor** — wadah angka berdimensi banyak yang menyimpan gambar atau hasil hitungan; seperti tumpukan lembar spreadsheet: satu angka (nilai), satu baris (deret), satu tabel (lembar), lalu banyak tabel ditumpuk.
+
+**Matriks** — tabel angka dua dimensi (baris × kolom); persis seperti papan catur yang tiap kotaknya diisi satu angka.
+
+**Vektor** — deretan angka satu baris; ibarat daftar belanja bernomor, tiap posisi punya makna tetap.
+
+**Batch / mini-batch** — sekelompok kecil gambar yang diproses bersamaan dalam satu langkah belajar; seperti guru memeriksa 32 lembar ujian sekaligus, bukan satu-satu atau seluruh kelas sekaligus.
+
+**Epoch** — satu putaran penuh saat model sudah melihat semua gambar latih tepat satu kali; ibarat membaca ulang seluruh buku dari halaman pertama sampai terakhir sekali jalan.
+
+**Reshape** — menyusun ulang angka yang sama ke bentuk berbeda tanpa mengubah isinya; seperti menata 12 telur dari satu baris panjang menjadi kotak 3×4 — telurnya tetap 12.
+
+**Transpos** — menukar baris jadi kolom pada sebuah tabel; seperti memutar tabel jadwal 90 derajat sehingga judul yang tadinya di atas kini di samping.
+
+**Broadcasting** — trik agar angka kecil bisa "diregangkan" otomatis untuk berpasangan dengan tabel besar; seperti satu resep bumbu yang diterapkan ke semua porsi masakan tanpa menulis ulang resepnya.
+
+**Fancy indexing** — mengambil banyak elemen sekaligus dengan menyebut daftar posisinya; seperti berkata "ambilkan kursi nomor 3, 7, dan 10" alih-alih menunjuk satu per satu.
+
+**In-place** — mengubah isi wadah angka langsung di tempat tanpa membuat salinan baru; seperti mengedit dokumen asli, bukan menyimpannya sebagai file baru dulu.
+
+**Mask** — daftar benar/salah yang menandai elemen mana yang dipakai dan mana yang diabaikan; seperti stabilo yang menyorot kata-kata penting dan membiarkan sisanya.
+
+**Argmax** — mencari posisi angka terbesar dalam sebuah deret; seperti menunjuk siswa dengan nilai tertinggi di daftar, bukan menyebut nilainya.
+
+**Gradien** — penunjuk arah dan seberapa besar suatu nilai harus diubah agar hasil membaik; seperti kompas yang menunjukkan ke mana harus melangkah supaya lebih cepat sampai puncak.
+
+**Backpropagation** — cara menelusuri kesalahan dari hasil akhir mundur ke setiap bagian model untuk tahu siapa yang perlu diperbaiki; seperti menelusuri balik resep gagal untuk menemukan bumbu mana yang salah takar.
+
+**Forward & backward** — dua arah proses: maju (forward) menghasilkan tebakan, mundur (backward) menghitung kesalahan dan cara memperbaikinya; seperti mengerjakan soal lalu mencocokkan dengan kunci untuk tahu di mana keliru.
+
+**Softmax** — mengubah sekumpulan skor mentah menjadi persentase keyakinan yang totalnya 100%; seperti mengubah perolehan suara jadi persentase pemilih tiap kandidat.
+
+**Cross-entropy** — ukuran seberapa jauh tebakan model meleset dari jawaban benar; makin yakin tapi salah, makin besar hukumannya — seperti denda yang membengkak kalau kita menjawab "pasti benar" padahal salah.
+
+**One-hot** — cara menulis jawaban kategori sebagai deret 0 dengan satu angka 1 di posisi yang benar; seperti kartu absensi yang hanya satu kotak dicentang untuk menandai kelas yang dihadiri.
+
+**Momentum** — teknik agar perbaikan model tidak berhenti-henti melainkan mempertahankan arah seperti benda yang sudah melaju; seperti bola menggelinding menuruni bukit yang tetap meluncur melewati lubang-lubang kecil.
+
+**Varians** — ukuran seberapa berpencar-pencar hasil dari nilai rata-ratanya; seperti tembakan panah yang tersebar jauh dari titik pusat menunjukkan varians tinggi.
+
+**Overfitting** — kondisi saat model terlalu hafal contoh latihan sampai gagal pada soal baru; seperti murid yang menghafal kunci jawaban ujian lama tapi bingung menghadapi soal yang sedikit diubah.
+
+**Regularisasi** — sekumpulan cara menahan model agar tidak terlalu hafal, mencakup *dropout* (mematikan sebagian bagian secara acak saat berlatih) dan *weight decay* (menghukum angka-angka yang membesar berlebihan); seperti melatih tim dengan pemain bergantian diistirahatkan dan melarang satu bintang mendominasi.
+
+**Kernel / filter** — jendela kecil berisi angka yang digeser ke seluruh gambar untuk mendeteksi pola tertentu; seperti stempel bermotif yang dicap ke tiap bagian gambar untuk menemukan garis atau tepi.
+
+**Stride** — seberapa jauh jendela filter melompat setiap kali digeser; seperti langkah kaki — langkah lebar (stride besar) memindai lebih cepat tapi lebih kasar.
+
+**Padding** — pinggiran angka nol yang ditambahkan mengelilingi gambar agar tepinya tetap terbaca; seperti bingkai kosong di sekeliling foto supaya sudut-sudutnya tidak terpotong saat dicap filter.
+
+**Feature map** — gambar hasil setelah sebuah filter dijalankan, menyorot di mana pola yang dicari muncul; seperti peta panas yang menyala di lokasi-lokasi yang cocok dengan motif stempel.
+
+**Konvolusi** — proses menggeser filter ke seluruh gambar sambil menghitung kecocokan di tiap posisi; seperti menyorotkan senter bermotif ke seluruh dinding untuk melihat bagian mana yang berpola sama.
+
+**Normalisasi / standardisasi** — menyetel ulang angka agar berada pada skala setara, biasanya berpusat di rata-rata 0 dengan sebaran seragam; seperti menyamakan satuan agar tinggi badan dan berat badan bisa dibandingkan adil.
+
+**Ensembel** — menggabungkan tebakan beberapa model lalu mengambil kesepakatannya untuk hasil lebih stabil; seperti panel juri — rata-rata banyak juri lebih tepercaya daripada satu juri saja.
+
+**TTA (*Test-Time Augmentation*)** — memberi model beberapa versi gambar yang sama (dibalik, digeser) saat pengujian lalu merata-ratakan hasilnya; seperti melihat objek dari beberapa sudut sebelum memutuskan itu apa.
+
+**Notasi ilmiah** — cara ringkas menulis angka sangat besar atau sangat kecil, misalnya `1e-8` berarti 0,00000001; seperti singkatan "8 nol di belakang koma" supaya tak perlu menulis deretan nol yang panjang.
+
+## Simbol matematika
+
+**Σ (sigma)** — perintah "jumlahkan semuanya"; seperti tombol total di kalkulator yang menambahkan seluruh angka dalam daftar.
+
+**∂L/∂x** — seberapa besar hasil akhir (L) berubah bila x digeser sedikit, sekaligus arah perbaikannya; seperti mengukur berapa banyak rasa sup berubah kalau garam ditambah sejumput.
+
+**∇ dan δ (nabla & delta)** — gradien, yaitu sinyal koreksi yang mengalir mundur ke tiap bagian model; seperti umpan balik dari pelanggan yang diteruskan mundur ke setiap bagian produksi untuk diperbaiki.
+
+**ᵀ (transpos)** — tanda kecil yang berarti "tukar baris jadi kolom" pada sebuah tabel; seperti memutar tabel 90 derajat.
+
+**𝒩 (skrip N)** — angka acak yang diambil dari sebaran berbentuk lonceng, banyak di tengah dan jarang di tepi; seperti tinggi badan orang: kebanyakan sedang, sedikit yang sangat pendek atau sangat tinggi.
+
+**e (bilangan Euler)** — bilangan tetap ≈2,718 yang jadi dasar hitungan pertumbuhan dan eksponen; seperti angka istimewa alam, mirip peran π pada lingkaran.
+
+**μ (mu)** — rata-rata sekumpulan angka; seperti nilai tengah rapor yang mewakili keseluruhan.
+
+**σ (sigma kecil)** — simpangan baku, ukuran seberapa lebar angka menyebar dari rata-ratanya; seperti mengukur apakah nilai satu kelas rapat mengumpul atau berpencar jauh.
+
+**ε (epsilon)** — angka super kecil yang ditambahkan sebagai penjaga agar tak terjadi pembagian dengan nol; seperti ganjalan tipis supaya mesin hitung tidak macet.
 
 ---
 
