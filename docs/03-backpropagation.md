@@ -7,7 +7,7 @@ mengalir berlawanan arah dengan forward pass.
 ## Aliran gradien antar lapisan
 
 ```mermaid
-flowchart RL
+flowchart TB
     P["Loss L<br/>(cross-entropy)"] -->|"∂L/∂z = p − y"| Z["skor z<br/>(N,2)"]
     Z -->|"dW3=x·δ, dx=δ·Wᵀ"| F2["FC2 (N,84)"]
     F2 -->|"·1[u>0]"| R4["ReLU"]

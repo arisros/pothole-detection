@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -62,6 +62,7 @@ window.MathJax = {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 <script>
 mermaid.initialize({ startOnLoad: false, theme: "base",
@@ -141,6 +142,10 @@ fetch("content/" + doc + ".md")
         pc.classList.toggle("active", btn.dataset.t === "code");
         pd.classList.toggle("active", btn.dataset.t === "diagram");
       }));
+    });
+    // Sorot sintaks kode (mermaid sudah jadi div, jadi hanya blok kode asli).
+    if (window.hljs) el.querySelectorAll("pre code").forEach((c) => {
+      try { window.hljs.highlightElement(c); } catch (e) { /* abaikan */ }
     });
     mermaid.run({ querySelector: ".mermaid" });
     if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]);

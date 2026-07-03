@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -108,7 +108,7 @@
       48 → 44 → 22 → 18 → 9.</p>
     <div class="diagram">
       <div class="mermaid">
-flowchart LR
+flowchart TB
     A["Input<br/>3×48×48"] --> B["Conv1 6@5×5 · ReLU<br/>6×44×44"]
     B --> C["MaxPool<br/>6×22×22"]
     C --> D["Conv2 16@5×5 · ReLU<br/>16×18×18"]

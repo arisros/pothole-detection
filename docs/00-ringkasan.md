@@ -12,7 +12,7 @@ operasi maju (forward) dan mundur (backward)-nya diturunkan dan dikodekan sendir
 ## Pipeline penelitian
 
 ```mermaid
-flowchart LR
+flowchart TB
     A[("Dataset publik<br/>GitHub MIT")] --> B["Unduh<br/>download_data.py"]
     B --> C["Pelabelan<br/>label_dataset.py<br/>labels.csv"]
     C --> D["Preprocessing<br/>preprocess.py<br/>RGB · 48x48 · normalisasi · augmentasi daring · split"]
