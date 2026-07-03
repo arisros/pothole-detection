@@ -8,13 +8,13 @@ meneruskannya ke lapisan berikutnya.
 
 ```mermaid
 flowchart LR
-    X["x<br/>(N,1,32,32)"] -->|"konvolusi 6@5×5"| H1["a1<br/>(N,6,28,28)"]
-    H1 -->|"ReLU max(0,·)"| H1r["(N,6,28,28)"]
-    H1r -->|"max-pool 2×2"| H2["(N,6,14,14)"]
-    H2 -->|"konvolusi 16@5×5"| H3["a2<br/>(N,16,10,10)"]
-    H3 -->|"ReLU"| H3r["(N,16,10,10)"]
-    H3r -->|"max-pool 2×2"| H4["(N,16,5,5)"]
-    H4 -->|"flatten"| V["(N,400)"]
+    X["x<br/>(N,3,48,48)"] -->|"konvolusi 6@5×5"| H1["a1<br/>(N,6,44,44)"]
+    H1 -->|"ReLU max(0,·)"| H1r["(N,6,44,44)"]
+    H1r -->|"max-pool 2×2"| H2["(N,6,22,22)"]
+    H2 -->|"konvolusi 16@5×5"| H3["a2<br/>(N,16,18,18)"]
+    H3 -->|"ReLU"| H3r["(N,16,18,18)"]
+    H3r -->|"max-pool 2×2"| H4["(N,16,9,9)"]
+    H4 -->|"flatten"| V["(N,1296)"]
     V -->|"W·x+b, ReLU"| F1["(N,120)"]
     F1 -->|"W·x+b, ReLU"| F2["(N,84)"]
     F2 -->|"W·x+b"| Z["skor z<br/>(N,2)"]
@@ -34,7 +34,7 @@ flowchart LR
 3. **Max Pooling** — ambil nilai maksimum tiap jendela 2×2, mengecilkan dimensi
    spasial setengahnya dan memberi sedikit invariansi terhadap pergeseran.
 
-4. **Flatten** — ubah tensor `(N,16,5,5)` menjadi vektor `(N,400)`.
+4. **Flatten** — ubah tensor `(N,16,9,9)` menjadi vektor `(N,1296)`.
 
 5. **Fully-Connected** — `y = Wx + b`, menggabungkan seluruh fitur.
 

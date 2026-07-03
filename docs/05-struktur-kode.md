@@ -38,11 +38,16 @@ classDiagram
         +forward(x)
         +backward(dout)
     }
+    class Dropout {
+        +forward(x)
+        +backward(dout)
+    }
     Layer <|-- Conv2D
     Layer <|-- MaxPool2D
     Layer <|-- ReLU
     Layer <|-- Flatten
     Layer <|-- Dense
+    Layer <|-- Dropout
 
     class LeNet5 {
         +list layers
@@ -56,9 +61,9 @@ classDiagram
         +forward(scores, y) loss
         +backward() dscores
     }
-    class SGDMomentum {
-        +float lr, momentum
-        +dict velocities
+    class Adam {
+        +float lr, weight_decay
+        +dict m, v
         +step()
         +zero_grad()
     }
@@ -71,7 +76,7 @@ classDiagram
     LeNet5 o-- Layer : merangkai
     Trainer --> LeNet5 : melatih
     Trainer --> SoftmaxCrossEntropy : menghitung loss
-    Trainer --> SGDMomentum : memperbarui bobot
+    Trainer --> Adam : memperbarui bobot
 ```
 
 ## Tanggung jawab tiap berkas
@@ -80,9 +85,10 @@ classDiagram
 |--------|-----|
 | `tensor_utils.py` | `im2col`, `col2im`, `conv_output_size` |
 | `init.py` | inisialisasi He & Xavier |
-| `layers.py` | `Conv2D`, `MaxPool2D`, `ReLU`, `Flatten`, `Dense` |
+| `layers.py` | `Conv2D`, `MaxPool2D`, `ReLU`, `Flatten`, `Dense`, `Dropout` |
 | `losses.py` | `softmax`, `SoftmaxCrossEntropy` |
-| `optim.py` | `SGDMomentum` |
+| `augment.py` | augmentasi daring (flip, geser, kontras, kecerahan, noise) |
+| `optim.py` | `Adam` (default) & `SGDMomentum` + cosine LR, weight decay |
 | `metrics.py` | confusion matrix, akurasi, presisi, recall, F1 |
 | `model.py` | `LeNet5` (rakit lapisan, simpan/muat bobot) |
 | `trainer.py` | `Trainer` (training loop + best-val checkpoint) |
