@@ -34,14 +34,22 @@ def to_grayscale(rgb):
 
 
 def load_image(path):
-    """Buka -> resize -> grayscale -> array [0,1] berbentuk (1, H, W)."""
+    """Buka -> resize -> array [0,1] berbentuk (C, H, W).
+
+    C = 1 (grayscale, luminance BT.601) atau 3 (RGB) sesuai config.IMG_CHANNELS.
+    RGB mempertahankan lebih banyak sinyal (tekstur/bayangan/warna aspal) yang
+    membantu membedakan lubang dari jalan utuh.
+    """
     with Image.open(path) as im:
         im = im.convert("RGB").resize(
             (config.IMG_SIZE, config.IMG_SIZE), Image.BILINEAR
         )
         arr = np.asarray(im, dtype=np.float64)      # (H, W, 3), 0..255
-    gray = to_grayscale(arr) / 255.0                # (H, W) di [0,1]
-    return gray[np.newaxis, :, :]                   # (1, H, W)
+    if config.IMG_CHANNELS == 1:
+        gray = to_grayscale(arr) / 255.0            # (H, W) di [0,1]
+        return gray[np.newaxis, :, :]               # (1, H, W)
+    rgb = arr / 255.0                               # (H, W, 3) di [0,1]
+    return np.transpose(rgb, (2, 0, 1))             # (3, H, W)
 
 
 def read_labels():
@@ -107,7 +115,10 @@ def save_samples(x01, y, path):
         idxs = rng.choice(np.where(y == label)[0], size=6, replace=False)
         for col, idx in enumerate(idxs):
             ax = axes[row, col]
-            ax.imshow(x01[idx, 0], cmap="gray")
+            if x01.shape[1] == 1:
+                ax.imshow(x01[idx, 0], cmap="gray")
+            else:
+                ax.imshow(np.transpose(x01[idx], (1, 2, 0)))  # (C,H,W)->(H,W,C)
             ax.set_xticks([]); ax.set_yticks([])
             if col == 0:
                 ax.set_ylabel(config.CLASS_NAMES[label], fontsize=11)
