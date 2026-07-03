@@ -16,14 +16,14 @@ dengan W = tinggi/lebar masukan, N = ukuran kernel, P = padding, S = stride.
 
 ```mermaid
 flowchart TB
-    A["Input<br/>1 × 32 × 32"]
-    B["Conv1: 6 filter 5×5, pad 0, stride 1<br/>+ ReLU<br/>6 × 28 × 28"]
-    C["MaxPool 2×2, stride 2<br/>6 × 14 × 14"]
-    D["Conv2: 16 filter 5×5, pad 0, stride 1<br/>+ ReLU<br/>16 × 10 × 10"]
-    E["MaxPool 2×2, stride 2<br/>16 × 5 × 5"]
-    F["Flatten<br/>400"]
-    G["FC-120 + ReLU<br/>120"]
-    H["FC-84 + ReLU<br/>84"]
+    A["Input<br/>3 × 48 × 48"]
+    B["Conv1: 6 filter 5×5, pad 0, stride 1<br/>+ ReLU<br/>6 × 44 × 44"]
+    C["MaxPool 2×2, stride 2<br/>6 × 22 × 22"]
+    D["Conv2: 16 filter 5×5, pad 0, stride 1<br/>+ ReLU<br/>16 × 18 × 18"]
+    E["MaxPool 2×2, stride 2<br/>16 × 9 × 9"]
+    F["Flatten<br/>1296"]
+    G["FC-120 + ReLU + Dropout(0,3)<br/>120"]
+    H["FC-84 + ReLU + Dropout(0,3)<br/>84"]
     I["FC-2 + Softmax<br/>2 → {normal, pothole}"]
 
     A --> B --> C --> D --> E --> F --> G --> H --> I
@@ -42,13 +42,13 @@ flowchart TB
 
 | Tahap | Operasi | Rumus | Keluaran |
 |-------|---------|-------|----------|
-| Input | — | — | 1 × 32 × 32 |
-| Conv1 | 6×(5×5), P=0, S=1 | (32 − 5 + 0)/1 + 1 = 28 | 6 × 28 × 28 |
-| Pool1 | max 2×2, S=2 | (28 − 2)/2 + 1 = 14 | 6 × 14 × 14 |
-| Conv2 | 16×(5×5), P=0, S=1 | (14 − 5 + 0)/1 + 1 = 10 | 16 × 10 × 10 |
-| Pool2 | max 2×2, S=2 | (10 − 2)/2 + 1 = 5 | 16 × 5 × 5 |
-| Flatten | 16·5·5 | — | 400 |
-| FC1 | 400 → 120 | — | 120 |
+| Input | — | — | 3 × 48 × 48 |
+| Conv1 | 6×(5×5), P=0, S=1 | (48 − 5 + 0)/1 + 1 = 44 | 6 × 44 × 44 |
+| Pool1 | max 2×2, S=2 | (44 − 2)/2 + 1 = 22 | 6 × 22 × 22 |
+| Conv2 | 16×(5×5), P=0, S=1 | (22 − 5 + 0)/1 + 1 = 18 | 16 × 18 × 18 |
+| Pool2 | max 2×2, S=2 | (18 − 2)/2 + 1 = 9 | 16 × 9 × 9 |
+| Flatten | 16·9·9 | — | 1296 |
+| FC1 | 1296 → 120 | — | 120 |
 | FC2 | 120 → 84 | — | 84 |
 | FC3 | 84 → 2 | — | 2 |
 

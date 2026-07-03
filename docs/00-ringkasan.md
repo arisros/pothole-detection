@@ -15,9 +15,9 @@ operasi maju (forward) dan mundur (backward)-nya diturunkan dan dikodekan sendir
 flowchart LR
     A[("Dataset publik<br/>GitHub MIT")] --> B["Unduh<br/>download_data.py"]
     B --> C["Pelabelan<br/>label_dataset.py<br/>labels.csv"]
-    C --> D["Preprocessing<br/>preprocess.py<br/>grayscale · 32x32 · normalisasi · augmentasi · split"]
+    C --> D["Preprocessing<br/>preprocess.py<br/>RGB · 48x48 · normalisasi · augmentasi daring · split"]
     D --> E["dataset.npz<br/>train / val / test"]
-    E --> F["Pelatihan<br/>train.py<br/>LeNet-5 manual + SGDM"]
+    E --> F["Pelatihan<br/>train.py<br/>LeNet-5 manual + Adam (ensembel 3 seed)"]
     F --> G["weights.npz<br/>history.csv"]
     G --> H["Evaluasi<br/>evaluate.py<br/>akurasi · presisi · recall · F1"]
     G --> I["Visualisasi<br/>visualize.py<br/>feature map antar lapisan"]

@@ -16,7 +16,7 @@
 - **Arsitektur acuan:** LeNet-5 (paling sederhana, ideal dipelajari).
 - **Helper (bukan inti):** Pillow (baca/resize citra), scikit-learn (split),
   matplotlib (plot). Inti pembelajaran = 100% NumPy.
-- **Skala:** citra 32×32 grayscale + dataset kecil, agar pelatihan murni-CPU selesai.
+- **Skala:** citra 48×48 RGB + dataset kecil, agar pelatihan murni-CPU tetap selesai.
 
 Konvensi tensor citra di seluruh kode: **`(N, C, H, W)`** = (batch, channel, height, width).
 
@@ -30,7 +30,7 @@ Dataset publik ─► Unduh ─► Pelabelan ─► Preprocessing ─► dataset
                                                              ▼
                                         ┌────────── CORE: CNN manual (NumPy) ──────────┐
                                         │ layers (Conv/Pool/ReLU/Dense) → losses →      │
-                                        │ optim (SGD+momentum) → model (LeNet5) →       │
+                                        │ optim (Adam / SGD-momentum) → model (LeNet5) →│
                                         │ trainer (loop) → gradcheck (bukti benar)      │
                                         └───────────────────────────────────────────────┘
                                                              │
@@ -46,13 +46,13 @@ config.py            # hyperparameter & path terpusat (seed=42, reproducible)
 src/
   download_data.py   # unduh dataset pothole/normal dari repo GitHub publik
   label_dataset.py   # susun folder kelas -> labels.csv
-  preprocess.py      # grayscale, resize 32x32, normalisasi, augmentasi, split -> dataset.npz
+  preprocess.py      # RGB, resize 48x48, normalisasi, augmentasi daring, split -> dataset.npz
   cnn/               # ======== INTI MANUAL ========
     tensor_utils.py  # im2col / col2im
     init.py          # inisialisasi He / Xavier
     layers.py        # Conv2D, MaxPool2D, ReLU, Flatten, Dense (forward+backward)
     losses.py        # softmax + cross-entropy
-    optim.py         # SGD + momentum
+    optim.py         # SGD-momentum & Adam (default) + cosine LR, weight decay
     metrics.py       # akurasi, presisi, recall, F1, confusion matrix
     model.py         # LeNet5 (rakit lapisan)
     trainer.py       # training loop mini-batch + best-val checkpoint
@@ -77,13 +77,12 @@ Baca folder kelas → tulis `labels.csv` (`path,label`) + verifikasi tiap gambar
 ### Langkah 3 — Preprocessing
 Lima langkah (tiap langkah eksplisit):
 
-1. **Grayscale (manual, dari kanal RGB):**
-   ```python
-   Y = 0.299*R + 0.587*G + 0.114*B   # luminance BT.601
-   ```
-2. **Resize** → 32×32 (input LeNet-5).
-3. **Normalisasi:** skala `[0,1]` lalu standardisasi `(x - μ)/σ` (μ,σ dari data latih).
-4. **Augmentasi** (train saja): flip horizontal + 2 pergeseran kecil → data latih ×4.
+1. **Kanal warna:** citra dipertahankan **RGB (3 kanal)** — warna menambah sinyal.
+   (Opsi grayscale via luminance BT.601 `Y = 0.299R + 0.587G + 0.114B` tetap tersedia.)
+2. **Resize** → 48×48 (input LeNet-5 adaptasi).
+3. **Normalisasi:** skala `[0,1]` lalu standardisasi `(x - μ)/σ` (μ,σ skalar dari data latih).
+4. **Augmentasi daring** (train saja, acak per-batch tiap epoch): flip horizontal, geser ±3px,
+   kontras/kecerahan, noise Gaussian → model tak pernah lihat citra sama persis dua kali.
 5. **Split stratified** 70/15/15 (pakai `sklearn.train_test_split`).
 
 Output: `data/processed/dataset.npz` berisi `x_train/y_train/x_val/y_val/x_test/y_test`.
@@ -288,17 +287,17 @@ class SGDMomentum:
 ```
 
 ### 3.8 Merakit LeNet-5
-Aliran dimensi (pakai `(W-N+2P)/S+1`): `32 → 28 → 14 → 10 → 5`.
+Aliran dimensi (pakai `(W-N+2P)/S+1`): `48 → 44 → 22 → 18 → 9`.
 ```python
 class LeNet5:
     def __init__(self, num_classes=2, seed=42):
         rng = np.random.default_rng(seed)
         self.layers = [
-            Conv2D(1, 6, 5, rng=rng),  ReLU(), MaxPool2D(2),   # 1x32x32 -> 6x28x28 -> 6x14x14
-            Conv2D(6, 16, 5, rng=rng), ReLU(), MaxPool2D(2),   # -> 16x10x10 -> 16x5x5
-            Flatten(),                                          # -> 400
-            Dense(16*5*5, 120, rng=rng), ReLU(),
-            Dense(120, 84, rng=rng),     ReLU(),
+            Conv2D(3, 6, 5, rng=rng),  ReLU(), MaxPool2D(2),   # 3x48x48 -> 6x44x44 -> 6x22x22
+            Conv2D(6, 16, 5, rng=rng), ReLU(), MaxPool2D(2),   # -> 16x18x18 -> 16x9x9
+            Flatten(),                                          # -> 1296
+            Dense(16*9*9, 120, rng=rng), ReLU(), Dropout(0.3),
+            Dense(120, 84, rng=rng),     ReLU(), Dropout(0.3),
             Dense(84, num_classes, rng=rng, init="xavier"),     # -> logit (N,2)
         ]
     def forward(self, x):
@@ -312,15 +311,18 @@ class LeNet5:
 ### 3.9 Training loop (satu iterasi = forward → loss → backward → step)
 ```python
 loss_fn = SoftmaxCrossEntropy()
-opt = SGDMomentum([l for l in model.layers if l.params], lr=0.01, momentum=0.9)
+opt = Adam([l for l in model.layers if l.params], lr=1e-3, weight_decay=1e-4)  # default; SGDMomentum juga tersedia
 
 for epoch in range(epochs):
+    opt.lr = cosine_decay(1e-3, epoch, epochs)   # jadwal cosine
     for xb, yb in minibatches(x_train, y_train, batch=32, shuffle=True):
-        scores = model.forward(xb)          # 1. maju
+        xb = augment(xb)                    # augmentasi daring acak per-batch
+        scores = model.forward(xb)          # 1. maju (dropout aktif)
         loss   = loss_fn.forward(scores, yb)# 2. loss
         model.backward(loss_fn.backward())  # 3. mundur (∂L/∂z = p - y) -> isi grads
-        opt.step()                          # 4. update bobot
+        opt.step()                          # 4. update bobot (+ L2 weight decay)
     # + evaluasi val, simpan snapshot bobot val terbaik (early stopping ringan)
+    # Ulangi utuh untuk seed 42/7/123 -> ensembel; saat uji rata-ratakan softmax + TTA.
 ```
 
 ### 3.10 Gradient checking — BUKTI backprop benar (wajib!)
@@ -348,14 +350,15 @@ def numerical_grad(f, x, dout, eps=1e-5):
 ## 4. Latih, Uji, Visualisasi (Langkah 5–7)
 
 - **Sanity check:** overfit 32 sampel → akurasi ~100% (memastikan model & backprop belajar).
-- **Latih penuh:** 15 epoch, SGDM lr=0.01 μ=0.9, batch 32 → simpan `weights.npz` + `history.csv`.
+- **Latih penuh:** 40 epoch, Adam lr=1e-3 + cosine, batch 32, weight decay 1e-4, dropout 0.3;
+  diulang untuk 3 seed (42/7/123) → ensembel. Simpan `weights.npz` + `history.csv`.
 - **Uji:** akurasi/presisi/recall/F1 + confusion matrix di test set.
 - **Visualisasi:** render feature map tiap lapisan (Conv1→Pool1→Conv2→Pool2) untuk melihat
   "pergerakan hidden layer".
 
-**Hasil nyata (test set):** Akurasi **75,7%**, Presisi **78,4%**, Recall **72,7%**, F1 **75,5%**.
-Overfitting terlihat (train→100%, val plateau ~80%) — wajar untuk dataset kecil + resolusi 32×32;
-ini dibahas jujur sebagai temuan.
+**Hasil nyata (test set, ensembel + TTA):** Akurasi **94,4%**, Presisi **91,5%**, Recall **98,2%**, F1 **94,7%**.
+Naik tajam dari baseline 75,7% berkat RGB 48×48 + regularisasi (weight decay/dropout) + augmentasi
+daring + ensembel 3 seed; overfitting kini terkendali (val-acc terbaik ~89,7% @ epoch 25).
 
 ---
 

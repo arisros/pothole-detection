@@ -46,7 +46,7 @@
   function busy() {
     verdict.className = "verdict idle";
     verdict.textContent = "Memproses…";
-    conf.textContent = "menjalankan LeNet-5 (NumPy)…";
+    conf.textContent = "menjalankan ensembel LeNet-5 (NumPy)…";
   }
 
   function render(d) {
