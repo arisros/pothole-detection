@@ -6,6 +6,8 @@ __pycache__/
 data/raw/
 data/processed/*.npz
 experiments/weights.npz
+experiments/weights_seed*.npz
+experiments/*.log
 
 # OS
 .DS_Store

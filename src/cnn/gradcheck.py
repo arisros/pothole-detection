@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .layers import Conv2D, Dense, MaxPool2D, ReLU
+from .layers import Conv2D, Dense, Dropout, MaxPool2D, ReLU
 from .losses import SoftmaxCrossEntropy
 
 EPS = 1e-5
@@ -131,6 +131,15 @@ def main():
     dense = Dense(5, 4, rng=rng)
     x_dense = rng.normal(size=(6, 5))
     all_results += check_layer("Dense", dense, x_dense, has_params=True)
+
+    # Dropout — mask dibekukan agar deterministik. Dengan mask tetap, dropout
+    # adalah penskalaan elemen linear, sehingga gradien numerik & analitik cocok.
+    drop = Dropout(0.5, seed=3)
+    x_drop = rng.normal(size=(4, 5))
+    drop.forward(x_drop)                       # tetapkan _mask sekali
+    frozen = drop._mask
+    drop.forward = lambda z, m=frozen: z * m   # bekukan forward = z * mask tetap
+    all_results += check_layer("Dropout", drop, x_drop, has_params=False)
 
     # Softmax + Cross-Entropy
     all_results += check_softmax_ce()

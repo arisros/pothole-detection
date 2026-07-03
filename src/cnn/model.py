@@ -20,16 +20,17 @@ from __future__ import annotations
 
 import numpy as np
 
-from .layers import Conv2D, Dense, Flatten, MaxPool2D, ReLU
+from .layers import Conv2D, Dense, Dropout, Flatten, MaxPool2D, ReLU
 from .losses import softmax
 
 
 class LeNet5:
     def __init__(self, num_classes=2, conv1=6, conv2=16, fc1=120, fc2=84,
-                 kernel=5, pool=2, seed=42):
+                 kernel=5, pool=2, seed=42, dropout_p=0.0,
+                 in_channels=1, img_size=32):
         rng = np.random.default_rng(seed)
 
-        self.conv1 = Conv2D(1, conv1, kernel, stride=1, pad=0, rng=rng)
+        self.conv1 = Conv2D(in_channels, conv1, kernel, stride=1, pad=0, rng=rng)
         self.relu1 = ReLU()
         self.pool1 = MaxPool2D(pool)
         self.conv2 = Conv2D(conv1, conv2, kernel, stride=1, pad=0, rng=rng)
@@ -37,12 +38,20 @@ class LeNet5:
         self.pool2 = MaxPool2D(pool)
         self.flatten = Flatten()
 
-        # Ukuran flatten dihitung dari aliran dimensi 32->28->14->10->5.
-        flat_dim = conv2 * 5 * 5
+        # Aliran dimensi spasial: conv (k) mengurangi (k-1), pool membagi 2.
+        # Dihitung dinamis agar mendukung IMG_SIZE selain 32 (mis. 48, 64).
+        s = img_size
+        s = (s - (kernel - 1)) // pool          # setelah conv1 + pool1
+        s = (s - (kernel - 1)) // pool          # setelah conv2 + pool2
+        self.feat_size = s
+        flat_dim = conv2 * s * s
         self.fc1 = Dense(flat_dim, fc1, rng=rng, init="he")
         self.relu3 = ReLU()
+        # Dropout pada lapisan terhubung penuh (regularisasi). p=0 -> identitas.
+        self.drop1 = Dropout(dropout_p, seed=seed + 1)
         self.fc2 = Dense(fc1, fc2, rng=rng, init="he")
         self.relu4 = ReLU()
+        self.drop2 = Dropout(dropout_p, seed=seed + 2)
         self.fc3 = Dense(fc2, num_classes, rng=rng, init="xavier")
 
         # Urutan lapisan untuk forward/backward dan iterasi parameter.
@@ -50,10 +59,22 @@ class LeNet5:
             self.conv1, self.relu1, self.pool1,
             self.conv2, self.relu2, self.pool2,
             self.flatten,
-            self.fc1, self.relu3,
-            self.fc2, self.relu4,
+            self.fc1, self.relu3, self.drop1,
+            self.fc2, self.relu4, self.drop2,
             self.fc3,
         ]
+
+    def train(self):
+        """Aktifkan mode latih (dropout hidup) pada semua lapisan."""
+        for layer in self.layers:
+            layer.training = True
+        return self
+
+    def eval(self):
+        """Aktifkan mode evaluasi (dropout mati / identitas) pada semua lapisan."""
+        for layer in self.layers:
+            layer.training = False
+        return self
 
     def forward(self, x):
         """Jalankan seluruh lapisan; kembalikan skor mentah (logit) (N, K)."""
@@ -71,6 +92,7 @@ class LeNet5:
 
     def predict_proba(self, x, batch_size=64):
         """Peluang softmax (N, K), dihitung per-batch agar hemat memori."""
+        self.eval()  # inferensi deterministik: dropout mati
         outs = []
         for start in range(0, x.shape[0], batch_size):
             xb = x[start:start + batch_size]
