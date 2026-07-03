@@ -960,8 +960,856 @@ flowchart TB
   saat *backward* (menghitung `dW`, `dx`) — pola "forward simpan cache, backward pakai
   cache" yang seragam di semua lapisan.
 
-*(Modul berikutnya — ReLU, MaxPool, Dense, Dropout, Softmax+CE, optimizer, trainer,
-augmentasi, preprocessing, dan ensembel+TTA — menyusul dengan format yang sama.)*
+## A.2 im2col & col2im
+
+Konvolusi naif berupa empat perulangan bersarang sangat lambat di Python, sehingga `im2col` mengubah tiap jendela konvolusi menjadi satu kolom matriks agar seluruh operasi menjadi satu perkalian matriks. `col2im` adalah kebalikannya: menebar (dan menjumlahkan) gradien kolom kembali ke bentuk citra saat backward.
+
+:::pair Gambar A.2 — Alur im2col dan col2im (`src/cnn/tensor_utils.py`)
+```python
+def conv_output_size(in_size, kernel, stride, pad):
+    return (in_size - kernel + 2 * pad) // stride + 1
+
+
+def _get_im2col_indices(x_shape, kh, kw, stride, pad):
+    n, c, h, w = x_shape
+    out_h = conv_output_size(h, kh, stride, pad)
+    out_w = conv_output_size(w, kw, stride, pad)
+    i0 = np.repeat(np.arange(kh), kw)
+    i0 = np.tile(i0, c)
+    i1 = stride * np.repeat(np.arange(out_h), out_w)
+    j0 = np.tile(np.arange(kw), kh * c)
+    j1 = stride * np.tile(np.arange(out_w), out_h)
+    i = i0.reshape(-1, 1) + i1.reshape(1, -1)
+    j = j0.reshape(-1, 1) + j1.reshape(1, -1)
+    d = np.repeat(np.arange(c), kh * kw).reshape(-1, 1)
+    return i, j, d, out_h, out_w
+
+
+def im2col(x, kh, kw, stride, pad):
+    x_padded = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)), mode="constant")
+    i, j, d, _, _ = _get_im2col_indices(x.shape, kh, kw, stride, pad)
+    cols = x_padded[:, d, i, j]              # (N, C*KH*KW, out_h*out_w)
+    c = x.shape[1]
+    cols = cols.transpose(1, 2, 0).reshape(kh * kw * c, -1)
+    return cols
+
+
+def col2im(cols, x_shape, kh, kw, stride, pad):
+    n, c, h, w = x_shape
+    x_padded = np.zeros((n, c, h + 2 * pad, w + 2 * pad), dtype=cols.dtype)
+    i, j, d, _, _ = _get_im2col_indices(x_shape, kh, kw, stride, pad)
+    cols_reshaped = cols.reshape(c * kh * kw, -1, n).transpose(2, 0, 1)
+    np.add.at(x_padded, (slice(None), d, i, j), cols_reshaped)
+    if pad == 0:
+        return x_padded
+    return x_padded[:, :, pad:-pad, pad:-pad]
+```
+```mermaid
+flowchart TB
+    A["x (N, C, H, W)"] -->|"np.pad"| B["x_padded"]
+    A --> C["_get_im2col_indices"]
+    C -->|"i, j, d"| D["fancy index pakai d, i, j"]
+    B --> D
+    D -->|"transpose + reshape"| E["cols (C·KH·KW, N·oh·ow)"]
+    E -->|"perkalian matriks (forward)"| F["hasil konvolusi"]
+    F -->|"gradien kolom (backward)"| G["col2im: np.add.at"]
+    C -->|"i, j, d"| G
+    G -->|"buang padding"| H["dx (N, C, H, W)"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`conv_output_size(...) return (in_size - kernel + 2 * pad) // stride + 1`** — rumus baku ukuran feature map. Untuk masukan `in_size`, kernel `kernel`, langkah `stride`, dan padding `pad`, ia menghasilkan berapa banyak posisi jendela yang muat ke satu arah (tinggi atau lebar). Pembagian `//` (integer) membuang sisa yang tak muat penuh.
+- **`_get_im2col_indices(...)`** — menghitung tiga array indeks (`i` baris, `j` kolom, `d` kanal) yang, bila dipakai langsung untuk meng-index citra ber-padding, menarik seluruh patch konvolusi sekaligus tanpa perulangan Python.
+- **`i0 = np.repeat(np.arange(kh), kw)` lalu `i0 = np.tile(i0, c)`** — `i0` adalah offset baris di dalam satu kernel (0..kh-1), tiap nilai diulang `kw` kali agar sepadan dengan lebar kernel, lalu diulang `c` kali agar berlaku untuk setiap kanal.
+- **`i1 = stride * np.repeat(np.arange(out_h), out_w)`** — offset baris untuk tiap posisi jendela pada output; dikali `stride` karena tiap langkah jendela menggeser masukan sejauh `stride`.
+- **`j0 = np.tile(np.arange(kw), kh * c)` dan `j1 = stride * np.tile(np.arange(out_w), out_h)`** — pasangan kolom dari `i0`/`i1`: `j0` offset kolom di dalam kernel, `j1` offset kolom antar posisi jendela.
+- **`i = i0.reshape(-1, 1) + i1.reshape(1, -1)`** — penjumlahan broadcast kolom-vektor `(i0)` dengan baris-vektor `(i1)` menghasilkan matriks indeks baris berukuran `(C·KH·KW, out_h·out_w)`: setiap sel adalah koordinat baris absolut satu piksel di dalam satu jendela. `j` disusun serupa untuk kolom.
+- **`d = np.repeat(np.arange(c), kh * kw).reshape(-1, 1)`** — indeks kanal untuk tiap baris matriks kolom; satu kolom-vektor yang di-broadcast ke seluruh posisi jendela.
+- **`x_padded = np.pad(...)`** — menambahkan bingkai nol setebal `pad` di sekeliling tinggi & lebar agar tepi citra ikut terkonvolusi.
+- **`cols = x_padded[:, d, i, j]`** — inti trik: fancy indexing memakai `d`, `i`, `j` menarik semua jendela sekaligus, menghasilkan `(N, C·KH·KW, out_h·out_w)`.
+- **`cols = cols.transpose(1, 2, 0).reshape(kh * kw * c, -1)`** — mengatur ulang sumbu menjadi `(C·KH·KW, N·oh·ow)`: tiap kolom = satu jendela yang sudah diratakan, dengan urutan spasial paling lambat dan batch paling cepat.
+- **`col2im(...)` `x_padded = np.zeros(...)`** — menyiapkan kanvas nol seukuran citra ber-padding untuk menampung akumulasi gradien.
+- **`np.add.at(x_padded, (slice(None), d, i, j), cols_reshaped)`** — kebalikan dari indexing pada `im2col`. Karena `stride < kernel` membuat satu piksel muncul di banyak jendela, `np.add.at` menjumlahkan (bukan menimpa) semua kontribusi ke posisi yang sama.
+- **`if pad == 0: return x_padded ... return x_padded[:, :, pad:-pad, pad:-pad]`** — memangkas bingkai padding agar hasil kembali ke ukuran citra asli; bila tak ada padding, dikembalikan apa adanya.
+
+## A.3 Konvolusi backward
+
+`Conv2D.backward` menurunkan tiga gradien dari `dout`: terhadap bias (`db`), bobot (`dW`), dan masukan (`dX`). Karena forward memakai perkalian matriks `W_col @ X_col`, backward-nya juga cukup memakai transpos dan perkalian matriks, ditutup `col2im` untuk mengembalikan `dX` ke bentuk citra.
+
+:::pair Gambar A.3 — Aliran gradien Conv2D.backward (`src/cnn/layers.py`)
+```python
+def backward(self, dout):
+    x_shape, x_col, w_col, out_h, out_w = self._cache
+    n = x_shape[0]
+
+    # Susun dout agar selaras dengan tata letak forward: (F, N*oh*ow).
+    dout_r = dout.transpose(1, 2, 3, 0).reshape(self.out_channels, -1)
+
+    # Gradien bias: jumlah seluruh posisi & batch.
+    self.grads["b"] = dout_r.sum(axis=1)
+    # Gradien bobot.
+    dw_col = dout_r @ x_col.T                    # (F, C*KH*KW)
+    self.grads["W"] = dw_col.reshape(self.params["W"].shape)
+    # Gradien terhadap masukan.
+    dx_col = w_col.T @ dout_r                    # (C*KH*KW, N*oh*ow)
+    dx = col2im(dx_col, x_shape, self.kh, self.kw, self.stride, self.pad)
+    return dx
+```
+```mermaid
+flowchart TB
+    A["dout (N, F, oh, ow)"] -->|"transpose + reshape"| B["dout_r (F, N·oh·ow)"]
+    B -->|"sum axis=1"| C["grads b (F,)"]
+    B -->|"@ x_col.T"| D["dw_col (F, C·KH·KW)"]
+    D -->|"reshape ke bentuk W"| E["grads W (F, C, KH, KW)"]
+    F["w_col (F, C·KH·KW)"] -->|"w_col.T @ dout_r"| G["dx_col (C·KH·KW, N·oh·ow)"]
+    B --> G
+    G -->|"col2im"| H["dx (N, C, H, W)"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`x_shape, x_col, w_col, out_h, out_w = self._cache`** — membongkar cache yang disimpan `forward`: bentuk masukan asli, matriks kolom masukan `x_col`, bobot terata `w_col`, serta ukuran output. Nilai-nilai ini dipakai ulang agar backward tak perlu menghitung `im2col` lagi.
+- **`n = x_shape[0]`** — ukuran batch, diambil dari elemen pertama bentuk masukan.
+- **`dout_r = dout.transpose(1, 2, 3, 0).reshape(self.out_channels, -1)`** — menata ulang gradien keluaran `(N, F, oh, ow)` menjadi `(F, N·oh·ow)`. Ini membalik urutan sumbu yang dilakukan forward (`transpose(3, 0, 1, 2)`) agar `dout` selaras dengan tata letak matriks `w_col @ x_col`.
+- **`self.grads["b"] = dout_r.sum(axis=1)`** — gradien bias = jumlah gradien atas semua posisi spasial dan seluruh batch, menyisakan satu nilai per filter `(F,)`. Sesuai fakta bahwa bias `b[f]` ditambahkan ke tiap posisi output filter `f`.
+- **`dw_col = dout_r @ x_col.T`** — gradien bobot dalam bentuk terata `(F, C·KH·KW)`. Karena forward `out = w_col @ x_col`, turunan terhadap `w_col` adalah `dout · x_col^T`.
+- **`self.grads["W"] = dw_col.reshape(self.params["W"].shape)`** — mengembalikan `dw_col` ke bentuk tensor bobot asli `(F, C, KH, KW)` agar cocok untuk pembaruan parameter oleh optimizer.
+- **`dx_col = w_col.T @ dout_r`** — gradien terhadap masukan dalam bentuk kolom `(C·KH·KW, N·oh·ow)`. Ini turunan `out = w_col @ x_col` terhadap `x_col`, yakni `w_col^T · dout`.
+- **`dx = col2im(dx_col, x_shape, self.kh, self.kw, self.stride, self.pad)`** — menebar gradien kolom kembali ke bentuk citra `(N, C, H, W)`, menjumlahkan kontribusi tiap piksel yang muncul di banyak jendela (lihat A.2).
+- **`return dx`** — mengembalikan gradien terhadap masukan agar diteruskan ke lapisan sebelumnya dalam rantai backpropagation.
+
+## A.4 ReLU (aktivasi tak-linear)
+
+ReLU membuang bagian negatif sinyal: `f(u) = max(0, u)`. Kunci implementasinya adalah menyimpan mask boolean `x > 0` saat forward agar backward tinggal meneruskan gradien di posisi yang aktif saja.
+
+:::pair Gambar A.4 — Forward-backward ReLU lewat mask boolean (`src/cnn/layers.py`)
+```python
+class ReLU(Layer):
+    """Rectified Linear Unit: f(u) = max(0, u), f'(u) = 1[u > 0]."""
+
+    def __init__(self):
+        super().__init__()
+        self._mask = None
+
+    def forward(self, x):
+        self._mask = x > 0
+        return x * self._mask
+
+    def backward(self, dout):
+        return dout * self._mask
+```
+```mermaid
+flowchart TB
+    X["x (N, C, H, W)"] --> M["mask = x positif (x lebih dari 0)"]
+    M --> F["forward: x × mask"]
+    M --> B["backward: dout × mask"]
+    F --> OUT["keluaran ReLU"]
+    D["dout (gradien hulu)"] --> B
+    B --> DX["dx"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`self._mask = None`** — slot cache; diisi saat forward, dipakai lagi saat backward tanpa perlu menyimpan seluruh `x`.
+- **`self._mask = x > 0`** — menghasilkan array boolean berukuran sama dengan `x`, bernilai `True` (dianggap `1`) di posisi positif dan `False` (dianggap `0`) di posisi nol/negatif. Inilah turunan `f'(u) = 1[u > 0]`.
+- **`return x * self._mask`** — perkalian elemen-per-elemen: nilai positif lolos apa adanya, nilai negatif menjadi `0`. Broadcasting boolean ke float membuat `True→1.0`, `False→0.0`.
+- **`return dout * self._mask`** — aturan rantai: gradien hulu `dout` hanya diteruskan pada posisi yang tadinya aktif; posisi mati menerima gradien `0` sehingga tidak ikut memperbarui bobot.
+
+## A.5 MaxPool2D (subsampling maksimum)
+
+MaxPool mengambil nilai terbesar tiap jendela `pool × pool`, mengecilkan resolusi spasial. Trik intinya: forward menyimpan **argmax** tiap jendela, dan backward hanya mengalirkan gradien ke sel pemenang itu.
+
+:::pair Gambar A.5 — Forward menyimpan argmax, backward menyebar ke pemenang (`src/cnn/layers.py`)
+```python
+def forward(self, x):
+    n, c, h, w = x.shape
+    out_h = conv_output_size(h, self.pool, self.stride, 0)
+    out_w = conv_output_size(w, self.pool, self.stride, 0)
+
+    x_reshaped = x.reshape(n * c, 1, h, w)
+    x_col = im2col(x_reshaped, self.pool, self.pool, self.stride, 0)
+    # x_col: (pool*pool, (N*C)*out_h*out_w)
+
+    max_idx = np.argmax(x_col, axis=0)
+    out = x_col[max_idx, np.arange(x_col.shape[1])]
+    out = out.reshape(out_h, out_w, n, c).transpose(2, 3, 0, 1)
+
+    self._cache = (x.shape, x_col.shape, max_idx, x_reshaped.shape)
+    return out
+
+def backward(self, dout):
+    x_shape, x_col_shape, max_idx, x_reshaped_shape = self._cache
+    n, c, h, w = x_shape
+
+    dout_flat = dout.transpose(2, 3, 0, 1).ravel()
+    dx_col = np.zeros(x_col_shape, dtype=dout.dtype)
+    dx_col[max_idx, np.arange(dx_col.shape[1])] = dout_flat
+
+    dx = col2im(dx_col, x_reshaped_shape, self.pool, self.pool, self.stride, 0)
+    dx = dx.reshape(x_shape)
+    return dx
+```
+```mermaid
+flowchart TB
+    X["x (N, C, H, W)"] --> R["reshape jadi (N·C, 1, H, W)"]
+    R --> COL["im2col: kolom per jendela"]
+    COL --> AM["max idx = argmax tiap kolom"]
+    AM --> O["out = ambil nilai pemenang"]
+    AM --> CACHE["simpan max idx di cache"]
+    CACHE --> BW["backward: taruh dout di baris pemenang"]
+    BW --> C2["col2im lalu reshape ke x"]
+    C2 --> DX["dx"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`x_reshaped = x.reshape(n * c, 1, h, w)`** — tiap kanal diperlakukan sebagai citra 1-kanal terpisah, supaya pooling dihitung per-kanal (tidak mencampur antar-kanal).
+- **`x_col = im2col(...)`** — merentang tiap jendela `pool × pool` menjadi satu kolom; barisnya `pool*pool` elemen, kolomnya sebanyak `(N*C)*out_h*out_w` jendela.
+- **`max_idx = np.argmax(x_col, axis=0)`** — indeks baris pemenang di tiap kolom; inilah "alamat" nilai maksimum yang wajib disimpan untuk backward.
+- **`out = x_col[max_idx, np.arange(x_col.shape[1])]`** — indexing lanjutan: untuk tiap kolom, ambil elemen di baris pemenangnya.
+- **`out.reshape(out_h, out_w, n, c).transpose(2, 3, 0, 1)`** — mengembalikan hasil datar ke tata letak `(N, C, out_h, out_w)`.
+- **`self._cache = (..., max_idx, ...)`** — menyimpan bentuk tensor dan `max_idx` agar backward tahu ke mana gradien dialirkan.
+- **`dout_flat = dout.transpose(2, 3, 0, 1).ravel()`** — meratakan gradien hulu mengikuti urutan kolom yang sama seperti forward.
+- **`dx_col = np.zeros(x_col_shape, ...)`** — kanvas gradien nol; mayoritas sel akan tetap nol karena bukan pemenang.
+- **`dx_col[max_idx, np.arange(...)] = dout_flat`** — inti backward: hanya baris pemenang tiap kolom yang diisi gradien; sel non-pemenang tetap `0`.
+- **`col2im(...)` lalu `dx.reshape(x_shape)`** — melipat kembali kolom menjadi peta gradien `(N*C, 1, H, W)`, lalu dikembalikan ke bentuk masukan asli `(N, C, H, W)`.
+
+## A.6 Flatten (perataan tensor)
+
+Flatten menjembatani bagian konvolusi dan bagian terhubung-penuh: mengubah tensor 4-D menjadi matriks 2-D. Karena hanya menata ulang bentuk, backward-nya cukup mengembalikan bentuk semula.
+
+:::pair Gambar A.6 — Reshape maju-mundur tanpa mengubah nilai (`src/cnn/layers.py`)
+```python
+class Flatten(Layer):
+    """Ratakan (N, C, H, W) -> (N, C*H*W) sebelum lapisan terhubung penuh."""
+
+    def __init__(self):
+        super().__init__()
+        self._shape = None
+
+    def forward(self, x):
+        self._shape = x.shape
+        return x.reshape(x.shape[0], -1)
+
+    def backward(self, dout):
+        return dout.reshape(self._shape)
+```
+```mermaid
+flowchart TB
+    X["x (N, C, H, W)"] --> S["simpan shape asli"]
+    S --> F["forward: reshape ke (N, C·H·W)"]
+    F --> OUT["matriks 2-D ke Dense"]
+    D["dout (N, C·H·W)"] --> B["backward: reshape balik ke shape asli"]
+    B --> DX["dx (N, C, H, W)"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`self._shape = None`** — slot untuk mengingat bentuk 4-D masukan sebelum diratakan.
+- **`self._shape = x.shape`** — menyimpan `(N, C, H, W)` agar backward bisa memulihkan bentuknya persis.
+- **`return x.reshape(x.shape[0], -1)`** — mempertahankan dimensi batch `N`, lalu `-1` membiarkan NumPy menghitung sendiri `C*H*W` menjadi satu vektor per sampel. Nilai tidak berubah, hanya tata letak.
+- **`return dout.reshape(self._shape)`** — operasi kebalikannya: gradien 2-D dari Dense dilipat kembali ke bentuk 4-D asli agar cocok untuk lapisan konvolusi/pooling di bawahnya.
+
+## A.7 Dense (lapisan terhubung penuh)
+
+Dense adalah perkalian matriks klasik `y = xW + b`. Ia menyimpan masukan `x` saat forward, lalu memakainya untuk menghitung gradien bobot `dW`, bias `db`, dan gradien masukan `dx` saat backward.
+
+:::pair Gambar A.7 — Forward y=xW+b dan tiga gradien backward (`src/cnn/layers.py`)
+```python
+def forward(self, x):
+    self._x = x
+    return x @ self.params["W"] + self.params["b"]
+
+def backward(self, dout):
+    self.grads["W"] = self._x.T @ dout
+    self.grads["b"] = dout.sum(axis=0)
+    return dout @ self.params["W"].T
+```
+```mermaid
+flowchart TB
+    X["x (N, in)"] --> F["forward: x @ W + b"]
+    W["W (in, out)"] --> F
+    F --> Y["y (N, out)"]
+    D["dout (N, out)"] --> DW["dW = x transpos @ dout"]
+    D --> DB["db = jumlah dout per baris"]
+    D --> DX["dx = dout @ W transpos"]
+    W --> DX
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`self._x = x`** — menyimpan masukan; wajib karena `dW` membutuhkan `x` saat backward.
+- **`return x @ self.params["W"] + self.params["b"]`** — perkalian matriks `(N, in) @ (in, out) = (N, out)`, lalu `b` di-broadcast ke tiap baris (sampel).
+- **`self.grads["W"] = self._x.T @ dout`** — turunan terhadap bobot: `x^T @ dout` menghasilkan matriks `(in, out)` sebangun dengan `W`.
+- **`self.grads["b"] = dout.sum(axis=0)`** — turunan terhadap bias: menjumlahkan gradien seluruh sampel dalam batch (sumbu `0`), sebab `b` dipakai bersama oleh semua baris.
+- **`return dout @ self.params["W"].T`** — turunan terhadap masukan `(N, out) @ (out, in) = (N, in)`, diteruskan sebagai `dout` bagi lapisan sebelumnya.
+
+## A.8 Dropout (regularisasi inverted dropout)
+
+Dropout mematikan sebagian unit secara acak saat latih untuk mencegah overfitting, dan menjadi identitas saat evaluasi. Skema *inverted dropout* langsung menskalakan `1/(1-p)` saat latih agar inferensi tak perlu penyesuaian.
+
+:::pair Gambar A.8 — Cabang training vs eval dan mask terskala (`src/cnn/layers.py`)
+```python
+def forward(self, x):
+    if not self.training or self.p <= 0.0:
+        self._mask = None
+        return x
+    keep = 1.0 - self.p
+    # Skala 1/keep sekaligus (inverted dropout) supaya inferensi tak perlu ubah.
+    self._mask = (self.rng.random(x.shape) < keep) / keep
+    return x * self._mask
+
+def backward(self, dout):
+    if self._mask is None:
+        return dout
+    return dout * self._mask
+```
+```mermaid
+flowchart TB
+    X["x masukan"] --> Q["training dan p lebih dari 0 ?"]
+    Q -->|"tidak (eval)"| ID["mask = None, y = x"]
+    Q -->|"ya (latih)"| K["keep = 1 − p"]
+    K --> M["mask = (acak kurang dari keep) / keep"]
+    M --> Y["y = x × mask"]
+    ID --> BW["backward: dout apa adanya"]
+    Y --> BW2["backward: dout × mask"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`if not self.training or self.p <= 0.0:`** — cabang eval/no-op: saat mode evaluasi atau peluang buang `p` nol, lapisan jadi identitas.
+- **`self._mask = None; return x`** — menandai tidak ada mask (dipakai backward) dan meneruskan `x` tanpa perubahan.
+- **`keep = 1.0 - self.p`** — peluang sebuah unit dipertahankan.
+- **`self._mask = (self.rng.random(x.shape) < keep) / keep`** — bangun mask Bernoulli: `rng.random < keep` menghasilkan `True`/`False` (unit hidup/mati), lalu dibagi `keep` sehingga unit yang lolos diperbesar `1/(1-p)`. Inilah *inverted dropout* yang menjaga ekspektasi keluaran tetap sama.
+- **`return x * self._mask`** — terapkan mask: sebagian unit di-nol-kan, sisanya terskala.
+- **`if self._mask is None: return dout`** — pada mode eval, gradien lewat tanpa diubah.
+- **`return dout * self._mask`** — pada mode latih, gradien mengikuti mask yang sama persis dengan forward (unit mati menerima gradien `0`, unit hidup terskala `1/keep`).
+
+## A.9 Softmax + Cross-Entropy
+
+Softmax mengubah skor mentah menjadi peluang antar-kelas, lalu cross-entropy mengukur seberapa jauh peluang itu dari label benar. Keduanya diturunkan bersama karena gradien gabungannya menyederhana menjadi `(p − y)/N`.
+
+:::pair Gambar A.9 — Alur forward loss dan backward gradien softmax+cross-entropy (`src/cnn/losses.py`)
+```python
+def softmax(z):
+    """Softmax stabil-numerik (kurangi maksimum tiap baris sebelum eksponen)."""
+    z_shift = z - z.max(axis=1, keepdims=True)
+    exp = np.exp(z_shift)
+    return exp / exp.sum(axis=1, keepdims=True)
+
+
+class SoftmaxCrossEntropy:
+    """Loss softmax + cross-entropy untuk klasifikasi multi-kelas."""
+
+    def forward(self, scores, y):
+        self._probs = softmax(scores)
+        self._y = y
+        self._n = scores.shape[0]
+
+        # Ambil peluang kelas benar; tambahkan epsilon agar log aman.
+        correct_logprobs = -np.log(self._probs[np.arange(self._n), y] + 1e-12)
+        return float(np.mean(correct_logprobs))
+
+    def backward(self):
+        """Gradien gabungan: (p - y) / N."""
+        grad = self._probs.copy()
+        grad[np.arange(self._n), self._y] -= 1.0
+        grad /= self._n
+        return grad
+```
+```mermaid
+flowchart TB
+    Z["scores z (N, K)"] --> SH["z_shift = z − max tiap baris"]
+    SH --> P["p = softmax(z) (peluang)"]
+    P --> L["L = rata-rata dari (−ln p kelas benar)"]
+    P --> G["grad = salinan p"]
+    G --> SUB["kurangi 1 di posisi kelas benar (p − y)"]
+    SUB --> DIV["bagi N → (p − y) / N"]
+    DIV --> OUT["gradien ke lapisan sebelumnya"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`z_shift = z - z.max(axis=1, keepdims=True)`** — kurangi nilai maksimum tiap baris (tiap contoh) sebelum eksponen. Ini trik stabil-numerik: hasil softmax tak berubah, tapi mencegah `np.exp` meluap (overflow) untuk skor besar.
+- **`exp = np.exp(z_shift)`** dan **`exp / exp.sum(axis=1, keepdims=True)`** — eksponenkan lalu normalisasi per baris agar tiap baris berjumlah 1, menghasilkan distribusi peluang `p_i = e^{z_i} / Σ_j e^{z_j}`.
+- **`self._probs = softmax(scores)`** — simpan peluang hasil forward; dipakai lagi saat backward tanpa hitung ulang.
+- **`self._y = y`** dan **`self._n = scores.shape[0]`** — simpan indeks kelas benar (integer, bukan one-hot) dan jumlah contoh `N` untuk perataan.
+- **`self._probs[np.arange(self._n), y]`** — pengindeksan fancy: ambil peluang di kolom kelas benar untuk setiap baris sekaligus, menghasilkan vektor sepanjang `N`.
+- **`-np.log(... + 1e-12)`** — negatif log-peluang kelas benar; `1e-12` menghindari `log(0)` bila peluang nyaris nol.
+- **`float(np.mean(correct_logprobs))`** — rata-ratakan atas seluruh batch menjadi satu skalar loss `L = −(1/N) Σ ln p kelas benar`.
+- **`grad = self._probs.copy()`** — mulai gradien dari salinan `p` (jangan ubah `_probs` aslinya).
+- **`grad[np.arange(self._n), self._y] -= 1.0`** — kurangi 1 hanya di posisi kelas benar. Karena `y` one-hot bernilai 1 di kelas benar dan 0 di lain, langkah ini setara `p − y`.
+- **`grad /= self._n`** — bagi `N` agar konsisten dengan loss yang dirata-ratakan, menghasilkan `(p − y)/N`.
+
+**Intuisi kenapa gradiennya menyederhana jadi (p − y):** turunan cross-entropy terhadap peluang, `∂L/∂p_i = −y_i/p_i`, tampak rumit karena ada pembagian `p_i`. Namun turunan softmax terhadap skor punya bentuk `∂p_i/∂z_j = p_i(δ_ij − p_j)`. Saat aturan rantai mengalikan keduanya dan menjumlahkan atas `i`, faktor `1/p_i` saling meniadakan dengan `p_i` dari softmax, dan suku-suku yang tersisa runtuh rapi menjadi `∂L/∂z_j = p_j − y_j`. Jadi gradien terhadap skor mentah hanyalah selisih antara peluang prediksi dan target one-hot: bila model sudah yakin dan benar (`p ≈ y`) gradien mendekati nol, sedangkan makin salah prediksinya makin besar dorongan koreksinya, tanpa pembagian yang bisa membuat perhitungan tidak stabil.
+
+## A.10 Inisialisasi bobot (He & Xavier)
+
+Inisialisasi yang baik menjaga varians aktivasi stabil antar lapisan agar sinyal tidak meledak atau menghilang. He dipakai untuk ReLU, Xavier untuk lapisan linier/softmax; keduanya menyekala simpangan baku bobot terhadap fan-in.
+
+:::pair Gambar A.10 — Dua skema inisialisasi bobot Gauss berdasarkan fan-in (`src/cnn/init.py`)
+```python
+def he_normal(shape, fan_in, rng):
+    """Inisialisasi He: std = sqrt(2 / fan_in)."""
+    std = np.sqrt(2.0 / fan_in)
+    return rng.normal(0.0, std, size=shape).astype(np.float64)
+
+
+def xavier_normal(shape, fan_in, rng):
+    """Inisialisasi Xavier: std = sqrt(1 / fan_in)."""
+    std = np.sqrt(1.0 / fan_in)
+    return rng.normal(0.0, std, size=shape).astype(np.float64)
+```
+```mermaid
+flowchart TB
+    FI["fan_in (n_in ke satu neuron)"] --> HE["He: std = akar(2 / fan_in)"]
+    FI --> XA["Xavier: std = akar(1 / fan_in)"]
+    HE --> RH["rng.normal(0, std, shape)"]
+    XA --> RX["rng.normal(0, std, shape)"]
+    RH --> WH["W untuk lapisan ReLU"]
+    RX --> WX["W untuk lapisan linier / softmax"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`he_normal(shape, fan_in, rng)`** — fungsi inisialisasi He. `shape` bentuk tensor bobot, `fan_in` jumlah masukan ke satu neuron (untuk konvolusi `n_in = C · KH · KW`), `rng` generator acak NumPy agar hasil dapat direproduksi.
+- **`std = np.sqrt(2.0 / fan_in)`** — simpangan baku He memakai faktor 2 di pembilang. Faktor 2 ini mengompensasi ReLU yang membuang setengah aktivasi (bagian negatif jadi nol), sehingga varians sinyal tetap terjaga saat merambat maju.
+- **`rng.normal(0.0, std, size=shape)`** — tarik sampel dari distribusi Gauss ber-mean 0 dan simpangan baku `std`, sebanyak dan sebentuk `shape`. Mean nol menjaga bobot simetris tanpa bias awal.
+- **`.astype(np.float64)`** — paksa tipe presisi ganda agar konsisten dengan perhitungan lain di jaringan.
+- **`xavier_normal(shape, fan_in, rng)`** — fungsi inisialisasi Xavier/Glorot, tanda tangan sama dengan He.
+- **`std = np.sqrt(1.0 / fan_in)`** — simpangan baku Xavier memakai faktor 1 (bukan 2). Cocok untuk aktivasi linier atau softmax yang tidak memangkas separuh sinyal seperti ReLU, sehingga tak perlu kompensasi ganda.
+- **Perbedaan inti He vs Xavier** — keduanya sama-sama Gauss ber-mean 0 dan menyekala `std ∝ 1/√fan_in`; hanya konstanta pembilangnya berbeda (2 untuk He, 1 untuk Xavier), menyesuaikan jenis aktivasi lapisan.
+
+## A.11 Perakitan LeNet-5
+
+Kelas `LeNet5` merakit seluruh lapisan (convolution, pooling, flatten, dense, dropout) menjadi satu daftar berurutan, lalu menjalankan forward/backward dengan menelusuri daftar itu. Dimensi masukan RGB 3×48×48; `flat_dim` dihitung dinamis dari `img_size` agar mendukung ukuran selain 32.
+
+:::pair Gambar A.11 — Perakitan lapisan & jalur forward/backward (`src/cnn/model.py`)
+```python
+class LeNet5:
+    def __init__(self, num_classes=2, conv1=6, conv2=16, fc1=120, fc2=84,
+                 kernel=5, pool=2, seed=42, dropout_p=0.0,
+                 in_channels=1, img_size=32):
+        rng = np.random.default_rng(seed)
+        self.conv1 = Conv2D(in_channels, conv1, kernel, stride=1, pad=0, rng=rng)
+        self.relu1 = ReLU()
+        self.pool1 = MaxPool2D(pool)
+        self.conv2 = Conv2D(conv1, conv2, kernel, stride=1, pad=0, rng=rng)
+        # ...
+        self.flatten = Flatten()
+        # flat_dim dinamis: conv kurangi (k-1), pool bagi 2
+        s = img_size
+        s = (s - (kernel - 1)) // pool          # setelah conv1 + pool1
+        s = (s - (kernel - 1)) // pool          # setelah conv2 + pool2
+        flat_dim = conv2 * s * s
+        self.fc1 = Dense(flat_dim, fc1, rng=rng, init="he")
+        self.drop1 = Dropout(dropout_p, seed=seed + 1)
+        # ...
+        self.fc3 = Dense(fc2, num_classes, rng=rng, init="xavier")
+        self.layers = [
+            self.conv1, self.relu1, self.pool1,
+            self.conv2, self.relu2, self.pool2,
+            self.flatten,
+            self.fc1, self.relu3, self.drop1,
+            self.fc2, self.relu4, self.drop2,
+            self.fc3,
+        ]
+
+    def forward(self, x):
+        out = x
+        for layer in self.layers:
+            out = layer.forward(out)
+        return out
+
+    def backward(self, dscores):
+        grad = dscores
+        for layer in reversed(self.layers):
+            grad = layer.backward(grad)
+        return grad
+
+    def predict_proba(self, x, batch_size=64):
+        self.eval()  # dropout mati
+        outs = []
+        for start in range(0, x.shape[0], batch_size):
+            xb = x[start:start + batch_size]
+            outs.append(softmax(self.forward(xb)))
+        return np.concatenate(outs, axis=0)
+
+    def save(self, path):
+        params = {}
+        for li, layer in enumerate(self.layers):
+            for name, p in layer.params.items():
+                params[f"layer{li}_{name}"] = p
+        np.savez(path, **params)
+```
+```mermaid
+flowchart TB
+    A["Input 3 x 48 x 48"] --> B["conv1 relu1 pool1 (6 x 22 x 22)"]
+    B --> C["conv2 relu2 pool2 (16 x 9 x 9)"]
+    C --> D["flatten (1296)"]
+    D --> E["fc1 relu3 drop1 (120)"]
+    E --> F["fc2 relu4 drop2 (84)"]
+    F --> G["fc3 (logit, 2 kelas)"]
+    G -. "backward: telusuri layers terbalik" .-> A
+    G --> H["softmax → predict_proba"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`rng = np.random.default_rng(seed)`** — satu generator acak dibagikan ke semua lapisan berbobot agar inisialisasi dapat direproduksi (deterministik dari `seed`).
+- **`Conv2D(in_channels, conv1, kernel, stride=1, pad=0)`** — conv1 memetakan `in_channels` (3 untuk RGB) ke 6 peta fitur dengan kernel 5×5 tanpa padding; conv2 dari 6 ke 16 kanal.
+- **`s = (s - (kernel - 1)) // pool`** (dua kali) — menghitung ukuran spasial: tiap conv mengurangi sisi sebesar `kernel-1`, tiap pool membaginya `pool`. Untuk 48 → 22 → 9, sehingga `flat_dim = 16 · 9 · 9 = 1296`.
+- **`init="he"` vs `init="xavier"`** — fc1/fc2 diinisialisasi He (cocok untuk ReLU sesudahnya), lapisan keluaran fc3 diinisialisasi Xavier (sebelum softmax).
+- **`self.drop1 = Dropout(dropout_p, seed=seed + 1)`** — dropout hanya dipasang pada lapisan terhubung penuh; `dropout_p=0` menjadikannya identitas. Seed digeser (`+1`, `+2`) agar tiap dropout memakai mask acak berbeda.
+- **`self.layers = [...]`** — satu daftar berurutan menyatukan seluruh lapisan; menjadi sumber tunggal untuk forward, backward, iterasi parameter, dan simpan/muat.
+- **`forward`: `for layer in self.layers: out = layer.forward(out)`** — memanggil `forward` tiap lapisan secara berantai, keluaran satu menjadi masukan berikut; hasil akhir logit `(N, K)`.
+- **`backward`: `for layer in reversed(self.layers)`** — gradien `dscores` merambat mundur menembus lapisan dalam urutan terbalik (rantai turunan).
+- **`predict_proba`** — memanggil `self.eval()` agar dropout mati (inferensi deterministik), lalu memproses `x` per-batch (`batch_size=64`) dan menerapkan `softmax` tiap batch untuk hemat memori; hasil disatukan dengan `np.concatenate`.
+- **`save` / `load`** — parameter tiap lapisan disimpan dengan kunci `f"layer{li}_{name}"` (indeks posisi dalam `self.layers` + nama parameter, mis. `layer7_W`); `load` membaca kembali dengan kunci yang sama, sehingga urutan lapisan wajib identik.
+
+## A.12 SGD + Momentum
+
+`SGDMomentum` memperbarui parameter dengan momentum: kecepatan `v` mengakumulasi arah gradien sebelumnya agar konvergensi lebih mulus. Weight decay L2 hanya dikenakan pada matriks bobot `W`, bukan bias.
+
+:::pair Gambar A.12 — Langkah pembaruan SGD dengan momentum (`src/cnn/optim.py`)
+```python
+class SGDMomentum:
+    def __init__(self, layers, lr=0.01, momentum=0.9, weight_decay=0.0):
+        self.layers = layers
+        self.lr = lr
+        self.momentum = momentum
+        self.weight_decay = weight_decay
+        self.velocities = {}
+        for li, layer in enumerate(layers):
+            for name, p in layer.params.items():
+                self.velocities[(li, name)] = np.zeros_like(p)
+
+    def step(self):
+        for li, layer in enumerate(self.layers):
+            for name in layer.params:
+                grad = layer.grads[name]
+                if self.weight_decay and name == "W":
+                    grad = grad + self.weight_decay * layer.params[name]
+                v = self.velocities[(li, name)]
+                v *= self.momentum
+                v -= self.lr * grad
+                layer.params[name] += v
+```
+```mermaid
+flowchart TB
+    A["grad = layer.grads[name]"] --> B["name == W ?"]
+    B -->|"ya"| C["grad = grad + weight_decay · theta"]
+    B -->|"tidak"| D["grad tetap"]
+    C --> E["v = momentum · v"]
+    D --> E
+    E --> F["v = v − lr · grad"]
+    F --> G["theta = theta + v (in-place)"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`self.velocities[(li, name)] = np.zeros_like(p)`** — tiap parameter memperoleh vektor kecepatan awal nol, diindeks pasangan (indeks lapisan, nama parameter) agar unik.
+- **`grad = layer.grads[name]`** — mengambil gradien yang sudah dihitung `backward` untuk parameter ini.
+- **`if self.weight_decay and name == "W"`** — penalti L2 `weight_decay · theta` hanya ditambahkan bila parameter adalah bobot `W`; bias `b` sengaja dilewati (tak disusutkan).
+- **`v *= self.momentum`** — kecepatan lama diredam faktor `momentum` (mis. 0.9), mempertahankan sebagian arah langkah sebelumnya.
+- **`v -= self.lr * grad`** — menambahkan kontribusi gradien saat ini (bertanda negatif karena bergerak menuruni gradien); rumus lengkapnya `v = μv − η∇`.
+- **`layer.params[name] += v`** — parameter diperbarui in-place (`θ = θ + v`) agar referensi array di lapisan tetap sama, tidak membuat array baru.
+- **`zero_grad`** (tak ditampilkan) — menyetel semua gradien ke nol sebelum backward berikutnya.
+
+## A.13 Adam
+
+`Adam` menyimpan estimasi momen pertama (`m`, rata-rata gradien) dan momen kedua (`v`, rata-rata kuadrat gradien), menerapkan koreksi bias, lalu mengambil langkah adaptif per-parameter. Weight decay L2 hanya pada bobot `W`.
+
+:::pair Gambar A.13 — Langkah pembaruan Adam dengan koreksi bias (`src/cnn/optim.py`)
+```python
+class Adam:
+    def __init__(self, layers, lr=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
+                 weight_decay=0.0):
+        # ... simpan hiperparameter ...
+        self.t = 0
+        self.m = {}
+        self.v = {}
+        for li, layer in enumerate(layers):
+            for name, p in layer.params.items():
+                self.m[(li, name)] = np.zeros_like(p)
+                self.v[(li, name)] = np.zeros_like(p)
+
+    def step(self):
+        self.t += 1
+        b1, b2 = self.beta1, self.beta2
+        bc1 = 1.0 - b1 ** self.t
+        bc2 = 1.0 - b2 ** self.t
+        for li, layer in enumerate(self.layers):
+            for name in layer.params:
+                grad = layer.grads[name]
+                if self.weight_decay and name == "W":
+                    grad = grad + self.weight_decay * layer.params[name]
+                m = self.m[(li, name)]
+                v = self.v[(li, name)]
+                m *= b1
+                m += (1.0 - b1) * grad
+                v *= b2
+                v += (1.0 - b2) * (grad * grad)
+                m_hat = m / bc1
+                v_hat = v / bc2
+                layer.params[name] -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
+```
+```mermaid
+flowchart TB
+    A["t = t + 1"] --> B["grad (+ weight_decay · theta bila W)"]
+    B --> C["m = b1 · m + (1 − b1) · grad"]
+    B --> D["v = b2 · v + (1 − b2) · grad kuadrat"]
+    C --> E["m_hat = m / (1 − b1 pangkat t)"]
+    D --> F["v_hat = v / (1 − b2 pangkat t)"]
+    E --> G["theta = theta − lr · m_hat / (sqrt(v_hat) + eps)"]
+    F --> G
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`self.t = 0`** — penghitung langkah global; dinaikkan tiap `step` dan dipakai untuk koreksi bias.
+- **`self.m` / `self.v`** — dua kamus momen (pertama dan kedua) tiap parameter, diinisialisasi nol dan diindeks `(li, name)`.
+- **`self.t += 1`** lalu **`bc1 = 1.0 - b1 ** self.t`**, **`bc2 = 1.0 - b2 ** self.t`** — faktor koreksi bias; karena `m` dan `v` mulai dari nol, pada langkah awal ia bias ke nol, koreksi ini mengompensasinya (mendekati 1 saat `t` besar).
+- **`if self.weight_decay and name == "W"`** — sama seperti SGDM, penalti L2 hanya untuk bobot `W`.
+- **`m *= b1; m += (1.0 - b1) * grad`** — pembaruan rata-rata bergerak momen pertama: `m = b1·m + (1−b1)·g`.
+- **`v *= b2; v += (1.0 - b2) * (grad * grad)`** — momen kedua memakai kuadrat gradien `g^2` (elemen demi elemen): `v = b2·v + (1−b2)·g^2`.
+- **`m_hat = m / bc1`**, **`v_hat = v / bc2`** — versi terkoreksi-bias dari kedua momen.
+- **`layer.params[name] -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)`** — langkah adaptif: gradien terskala dibagi akar momen kedua, sehingga tiap parameter memperoleh laju efektif sendiri; `eps` (1e-8) mencegah pembagian nol. Pembaruan in-place (`-=`).
+
+## A.14 Training loop mini-batch
+
+`Trainer.fit` menjalankan satu putaran epoch: tiap epoch mengatur laju belajar (cosine), melewatkan seluruh mini-batch (opsional diaugmentasi daring), lalu mengevaluasi train/val dan menyimpan snapshot bobot dengan `val_acc` terbaik untuk dipulihkan di akhir.
+
+:::pair Gambar A.14 — Loop pelatihan mini-batch dengan cosine LR dan restore bobot val terbaik (`src/cnn/trainer.py`)
+```python
+def fit(self, x_train, y_train, x_val=None, y_val=None, epochs=15,
+        verbose=True, restore_best=True):
+    best_val_acc, best_snapshot, best_epoch = -1.0, None, 0
+    for epoch in range(1, epochs + 1):
+        if self.cosine_lr:
+            self.optimizer.lr = 0.5 * self.base_lr * (
+                1.0 + np.cos(np.pi * (epoch - 1) / max(1, epochs - 1)))
+        self.model.train()  # dropout hidup saat latih
+        for xb, yb in self._iterate_minibatches(x_train, y_train):
+            if self.augment:
+                xb = random_augment(xb, self.rng, **self.aug_params)
+            scores = self.model.forward(xb)
+            loss = self.loss_fn.forward(scores, yb)
+            dscores = self.loss_fn.backward()
+            self.model.backward(dscores)
+            self.optimizer.step()
+        # ... catat train_loss/acc ke history ...
+        if x_val is not None:
+            val_loss, val_acc = self._evaluate(x_val, y_val)
+            if val_acc > best_val_acc:
+                best_val_acc, best_epoch = val_acc, epoch
+                best_snapshot = self._snapshot()
+    if restore_best and best_snapshot is not None:
+        self._restore(best_snapshot)
+```
+```mermaid
+flowchart TB
+    A["epoch = 1 .. epochs"] --> B["cosine_lr? setel optimizer.lr"]
+    B --> C["model.train() (dropout hidup)"]
+    C --> D["untuk tiap mini-batch"]
+    D --> E["augment? random_augment(xb)"]
+    E --> F["forward, loss, backward, optimizer.step()"]
+    F --> D
+    D --> G["evaluasi train dan val, catat history"]
+    G --> H["val_acc terbaik?"]
+    H -->|"ya"| I["best_snapshot = _snapshot()"]
+    H -->|"tidak"| A
+    I --> A
+    A --> J["restore_best? _restore(best_snapshot)"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`best_val_acc, best_snapshot, best_epoch = -1.0, None, 0`** — inisialisasi pelacak model terbaik; `best_val_acc = -1.0` memastikan epoch pertama pasti mengalahkannya.
+- **`for epoch in range(1, epochs + 1)`** — satu iterasi = satu kali lewat seluruh data latih.
+- **`self.optimizer.lr = 0.5 * self.base_lr * (1.0 + np.cos(...))`** — jadwal *cosine annealing*: laju belajar meluruh mulus dari `base_lr` menuju ~0 sepanjang pelatihan, menstabilkan epoch akhir dan meredam *bouncing* akurasi validasi. `max(1, epochs - 1)` mencegah pembagian nol saat `epochs == 1`.
+- **`self.model.train()`** — mengaktifkan mode latih (dropout hidup); pasangannya `self.model.eval()` di `_evaluate` mematikan dropout saat pengukuran.
+- **`for xb, yb in self._iterate_minibatches(...)`** — generator yang mengacak indeks (`self.rng.shuffle`) lalu memotong data menjadi potongan sebesar `batch_size`.
+- **`if self.augment: xb = random_augment(xb, self.rng, **self.aug_params)`** — augmentasi *daring*: batch diacak ulang tiap epoch sehingga model nyaris tak pernah melihat citra identik dua kali (lihat A.15).
+- **`scores = ...; loss = ...; dscores = ...; self.model.backward(dscores); self.optimizer.step()`** — empat langkah inti: forward → hitung loss → backprop gradien loss → perbarui parameter (SGD+momentum atau Adam).
+- **`if val_acc > best_val_acc:`** — kriteria *early-stopping* implisit berbasis validasi; saat lebih baik, `_snapshot()` menyalin dalam (deep copy) seluruh parameter tiap lapisan.
+- **`if restore_best and best_snapshot is not None: self._restore(best_snapshot)`** — di akhir pelatihan, bobot dikembalikan ke epoch dengan `val_acc` tertinggi, bukan bobot epoch terakhir yang mungkin sudah *overfit*.
+
+## A.15 Augmentasi daring
+
+`random_augment` menghasilkan salinan batch yang diacak per-citra tiap kali dipanggil: flip horizontal, geser integer dengan replikasi tepi, lalu transformasi fotometrik (kontras, kecerahan, noise). Karena dipanggil ulang tiap epoch, ragam data efektif tumbuh besar tanpa menambah memori.
+
+:::pair Gambar A.15 — Augmentasi acak per-citra pada batch terstandardisasi (`src/cnn/augment.py`)
+```python
+def random_augment(x, rng, max_shift=3, brightness=0.15, contrast=0.15,
+                   noise_std=0.05, flip_p=0.5):
+    n = x.shape[0]
+    out = x.copy()
+    for i in range(n):
+        img = out[i]
+        if rng.random() < flip_p:          # flip horizontal
+            img = img[:, :, ::-1]
+        dy = int(rng.integers(-max_shift, max_shift + 1))
+        dx = int(rng.integers(-max_shift, max_shift + 1))
+        img = _shift_replicate(np.ascontiguousarray(img), dy, dx)
+        if contrast:                        # kontras: kali faktor
+            img = img * (1.0 + rng.uniform(-contrast, contrast))
+        if brightness:                      # kecerahan: tambah konstanta
+            img = img + rng.uniform(-brightness, brightness)
+        if noise_std:                       # noise Gaussian aditif
+            img = img + rng.normal(0.0, noise_std, size=img.shape)
+        out[i] = img
+    return out
+```
+```mermaid
+flowchart TB
+    A["batch x (N, C, H, W), out = x.copy()"] --> B["untuk tiap citra i"]
+    B --> C["rng.random() kurang dari flip_p ? flip horizontal"]
+    C --> D["dy, dx acak di rentang (−max_shift .. max_shift)"]
+    D --> E["_shift_replicate: geser, tepi direplikasi (clamp)"]
+    E --> F["kontras: kali (1 + U(−c, c))"]
+    F --> G["kecerahan: tambah U(−b, b)"]
+    G --> H["noise: tambah N(0, noise_std kuadrat)"]
+    H --> B
+    B --> I["kembalikan out"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`out = x.copy()`** — bekerja pada salinan agar tensor latih asli tak termodifikasi; batch berikutnya tetap bersih.
+- **`for i in range(n):`** — tiap citra diaugmentasi *independen*, jadi satu batch memuat campuran transformasi berbeda.
+- **`if rng.random() < flip_p: img = img[:, :, ::-1]`** — flip horizontal berpeluang `flip_p` (default 0.5) dengan membalik sumbu lebar (`W`).
+- **`dy = int(rng.integers(-max_shift, max_shift + 1))`** — pergeseran integer acak; `+1` karena `integers` batas-atasnya eksklusif, sehingga `+max_shift` ikut terpilih.
+- **`img = _shift_replicate(np.ascontiguousarray(img), dy, dx)`** — geser via `np.roll` lalu tepi yang "terlipat" ditimpa nilai tepi (replikasi/clamp) agar tak muncul artefak nol; `ascontiguousarray` merapikan memori setelah slicing terbalik dari flip.
+- **`img = img * (1.0 + rng.uniform(-contrast, contrast))`** — kontras sebagai transformasi afin perkalian; sah dilakukan di ruang terstandardisasi.
+- **`img = img + rng.uniform(-brightness, brightness)`** — kecerahan sebagai pergeseran aditif konstan ke seluruh piksel.
+- **`img = img + rng.normal(0.0, noise_std, size=img.shape)`** — noise Gaussian per-piksel untuk menambah ketahanan terhadap derau sensor.
+- **`rng`** — instance `np.random.Generator` milik trainer, sehingga augmentasi tetap *reproducible* mengikuti seed.
+
+## A.16 Preprocessing dan split
+
+`load_image` membuka citra, me-resize ke `IMG_SIZE`, dan mengembalikan tensor `(C, H, W)` dalam `[0,1]` — RGB (`transpose`) atau grayscale luminance sesuai `config.IMG_CHANNELS`. Di `main`, data dibagi *stratified* 70/15/15 lalu distandardisasi dengan statistik data latih.
+
+:::pair Gambar A.16 — Muat citra RGB (C,H,W), split stratified, standardisasi skalar (`src/preprocess.py`)
+```python
+def load_image(path):
+    with Image.open(path) as im:
+        im = im.convert("RGB").resize(
+            (config.IMG_SIZE, config.IMG_SIZE), Image.BILINEAR)
+        arr = np.asarray(im, dtype=np.float64)      # (H, W, 3), 0..255
+    if config.IMG_CHANNELS == 1:
+        gray = to_grayscale(arr) / 255.0            # (H, W) di [0,1]
+        return gray[np.newaxis, :, :]               # (1, H, W)
+    rgb = arr / 255.0                               # (H, W, 3) di [0,1]
+    return np.transpose(rgb, (2, 0, 1))             # (3, H, W)
+
+# --- di main(): split stratified lalu standardisasi ---
+x_tmp, x_test, y_tmp, y_test = train_test_split(
+    X, y, test_size=config.TEST_RATIO, stratify=y, random_state=config.SEED)
+val_frac = config.VAL_RATIO / (config.TRAIN_RATIO + config.VAL_RATIO)
+x_train, x_val, y_train, y_val = train_test_split(
+    x_tmp, y_tmp, test_size=val_frac, stratify=y_tmp, random_state=config.SEED)
+
+mu = float(x_train.mean())
+sigma = float(x_train.std() + 1e-8)
+x_train = (x_train - mu) / sigma
+x_val = (x_val - mu) / sigma
+x_test = (x_test - mu) / sigma
+```
+```mermaid
+flowchart TB
+    A["Image.open + convert RGB"] --> B["resize ke (IMG_SIZE, IMG_SIZE), BILINEAR"]
+    B --> C["array float, 0..255"]
+    C --> D["IMG_CHANNELS == 1 ?"]
+    D -->|"grayscale"| E["to_grayscale / 255 jadi (1, H, W)"]
+    D -->|"RGB"| F["arr / 255, transpose jadi (3, H, W)"]
+    E --> G["split stratified: test lalu val dari sisa"]
+    F --> G
+    G --> H["mu, sigma dari x_train"]
+    H --> I["(x − mu) / sigma untuk train, val, test"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`im.convert("RGB").resize((config.IMG_SIZE, config.IMG_SIZE), Image.BILINEAR)`** — samakan semua citra ke ukuran masukan LeNet-5 memakai interpolasi bilinear; `convert("RGB")` menyeragamkan mode (mis. RGBA/grayscale) menjadi 3 kanal.
+- **`arr = np.asarray(im, dtype=np.float64)`** — tensor `(H, W, 3)` rentang 0..255 dalam presisi ganda.
+- **`if config.IMG_CHANNELS == 1: ... gray[np.newaxis, :, :]`** — jalur grayscale: luminance BT.601 dinormalisasi ke `[0,1]`, lalu tambahkan sumbu kanal menjadi `(1, H, W)`.
+- **`rgb = arr / 255.0; return np.transpose(rgb, (2, 0, 1))`** — jalur RGB (default): skalakan ke `[0,1]` lalu ubah tata sumbu dari `(H, W, C)` ke `(C, H, W)` sesuai konvensi tensor konvolusi. RGB menyimpan sinyal warna/tekstur aspal yang membantu membedakan lubang dari jalan utuh.
+- **`train_test_split(..., test_size=config.TEST_RATIO, stratify=y, ...)`** — pisahkan test lebih dulu; `stratify=y` menjaga proporsi kelas identik di tiap subset.
+- **`val_frac = config.VAL_RATIO / (config.TRAIN_RATIO + config.VAL_RATIO)`** — konversi rasio val terhadap *sisa* (train+val) setelah test dilepas, agar hasil akhir tepat 70/15/15.
+- **`random_state=config.SEED`** — split deterministik supaya eksperimen bisa direproduksi.
+- **`mu = float(x_train.mean()); sigma = float(x_train.std() + 1e-8)`** — standardisasi *skalar* (satu `mu`, satu `sigma` untuk seluruh tensor), dihitung **hanya** dari data latih agar tak ada kebocoran informasi. `1e-8` mencegah pembagian nol.
+- **`x_train = (x_train - mu) / sigma; x_val = ...; x_test = ...`** — statistik latih yang sama diterapkan ke val dan test; `mu`/`sigma` disimpan ke `norm_stats.json` untuk dipakai saat inferensi.
+
+## A.17 Ensembel dan TTA
+
+`ensemble_proba` merata-ratakan probabilitas softmax dari beberapa model (satu per seed) di mana tiap model memakai *test-time augmentation*: `tta_proba` merata-ratakan prediksi citra asli dan versi flip. Dua lapis perata-rataan ini meredam varians dan menaikkan akurasi.
+
+:::pair Gambar A.17 — Ensembel multi-seed dengan TTA flip pada softmax (`src/evaluate.py`)
+```python
+def tta_proba(model, x, batch_size=64):
+    p = model.predict_proba(x, batch_size)
+    p_flip = model.predict_proba(x[:, :, :, ::-1], batch_size)
+    return 0.5 * (p + p_flip)
+
+def ensemble_weight_paths():
+    paths = []
+    for seed in getattr(config, "ENSEMBLE_SEEDS", []):
+        p = config.WEIGHTS_NPZ.replace(".npz", f"_seed{seed}.npz")
+        if os.path.exists(p):
+            paths.append(p)
+    return paths or [config.WEIGHTS_NPZ]
+
+def ensemble_proba(x):
+    paths = ensemble_weight_paths()
+    acc = None
+    for p in paths:
+        model = _new_model().load(p)
+        pr = tta_proba(model, x)
+        acc = pr if acc is None else acc + pr
+    return acc / len(paths)
+```
+```mermaid
+flowchart TB
+    A["ensemble_weight_paths(): berkas seedNN.npz yang ada"] --> B["untuk tiap path bobot"]
+    B --> C["_new_model().load(p)"]
+    C --> D["tta_proba: predict_proba(x)"]
+    D --> E["predict_proba(x flip horizontal)"]
+    E --> F["p_tta = 0.5 (p + p_flip)"]
+    F --> G["akumulasi: acc = acc + p_tta"]
+    G --> B
+    B --> H["kembalikan acc / jumlah model"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`p = model.predict_proba(x, batch_size)`** — softmax model pada citra asli.
+- **`p_flip = model.predict_proba(x[:, :, :, ::-1], batch_size)`** — softmax pada citra yang dicermin kiri-kanan (balik sumbu `W`).
+- **`return 0.5 * (p + p_flip)`** — prediksi lubang seharusnya *invarian* terhadap cermin, jadi rata-rata keduanya meredam derau dan biasanya menaikkan akurasi sedikit.
+- **`for seed in getattr(config, "ENSEMBLE_SEEDS", []):`** — telusuri daftar seed; `getattr` dengan default `[]` aman bila konfigurasi tak mendefinisikannya.
+- **`p = config.WEIGHTS_NPZ.replace(".npz", f"_seed{seed}.npz")`** — bentuk nama berkas bobot per-seed (mis. `weights_seed7.npz`).
+- **`return paths or [config.WEIGHTS_NPZ]`** — jika tak ada bobot ensembel di disk, jatuh kembali ke satu bobot tunggal, sehingga alur evaluasi tetap jalan.
+- **`model = _new_model().load(p)`** — bangun ulang arsitektur LeNet5 sesuai `IMG_CHANNELS`/`IMG_SIZE` aktif lalu muat parameter tersimpan.
+- **`acc = pr if acc is None else acc + pr`** — akumulasi berjalan; inisialisasi pada iterasi pertama, lalu jumlahkan probabilitas TTA tiap model.
+- **`return acc / len(paths)`** — bagi dengan jumlah model untuk memperoleh rata-rata softmax ensembel; `np.argmax` atasnya (di `main`) menghasilkan label akhir.
+
 
 ---
 
