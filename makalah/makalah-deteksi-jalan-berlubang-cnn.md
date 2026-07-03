@@ -487,7 +487,7 @@ flowchart TB
     F["Flatten → 1296"]
     G["FC-120 + ReLU + Dropout(0,3)"]
     H["FC-84 + ReLU + Dropout(0,3)"]
-    I["FC-2 + Softmax → {normal, pothole}"]
+    I["FC-2 + Softmax → normal / pothole"]
     A --> B --> C --> D --> E --> F --> G --> H --> I
 ```
 
@@ -573,11 +573,11 @@ Inisialisasi He dipakai pada lapisan ber-ReLU, Xavier pada lapisan keluaran.
 ```mermaid
 flowchart RL
     P["Loss"] -->|"p − y"| Z["skor z"]
-    Z -->|"dW,dx"| F["FC ×3"]
-    F -->|"·1[u>0]"| R["ReLU"]
+    Z -->|"dW, dx"| F["FC × 3"]
+    F -->|"turunan ReLU"| R["ReLU"]
     R -->|"reshape"| FL["Flatten"]
     FL -->|"ke argmax"| PO["MaxPool"]
-    PO -->|"dW,db,dx=col2im"| CO["Conv"]
+    PO -->|"dW, db, col2im"| CO["Conv"]
 ```
 
 ## 3.7 Skema Pelatihan
@@ -893,6 +893,75 @@ pengembangan berikutnya:
    menstabilkan akurasi lebih lanjut.
 5. **Kembangkan ke deteksi objek** (mis. YOLO) agar tidak hanya
    mengklasifikasikan keberadaan lubang, tetapi juga melokalisasi posisinya.
+
+---
+
+# LAMPIRAN A — BEDAH KODE: DARI RUMUS KE IMPLEMENTASI
+
+Bab ini membedah kode inti (murni NumPy) baris demi baris, dipasangkan dengan
+diagram alurnya. Di layar lebar, **kode dan diagram tampil berdampingan**; di
+layar sempit keduanya menjadi **tab** (Kode / Diagram). Semua potongan diambil
+apa adanya dari repositori (`src/cnn/`).
+
+## A.1 Konvolusi via im2col — `Conv2D.forward`
+
+Konvolusi naif berupa empat perulangan bersarang (filter × kanal × baris × kolom)
+sangat lambat di Python. Trik **im2col** mengubah tiap jendela konvolusi menjadi
+satu kolom matriks, sehingga seluruh konvolusi menjadi **satu perkalian matriks**
+`w_col @ x_col`. Berikut jalur majunya:
+
+:::pair Gambar A.1 — Forward konvolusi (`src/cnn/layers.py`)
+```python
+def forward(self, x):
+    n, c, h, w = x.shape
+    out_h = conv_output_size(h, self.kh, self.stride, self.pad)
+    out_w = conv_output_size(w, self.kw, self.stride, self.pad)
+
+    x_col = im2col(x, self.kh, self.kw, self.stride, self.pad)  # (C*KH*KW, N*oh*ow)
+    w_col = self.params["W"].reshape(self.out_channels, -1)     # (F, C*KH*KW)
+
+    out = w_col @ x_col + self.params["b"][:, None]             # (F, N*oh*ow)
+    out = out.reshape(self.out_channels, out_h, out_w, n)
+    out = out.transpose(3, 0, 1, 2)                            # (N, F, oh, ow)
+
+    self._cache = (x.shape, x_col, w_col, out_h, out_w)
+    return out
+```
+```mermaid
+flowchart LR
+    X["x<br/>(N, C, H, W)"] --> IM["im2col<br/>tiap jendela → 1 kolom"]
+    IM --> XC["x_col<br/>(C·KH·KW, N·oh·ow)"]
+    W["W (bobot)<br/>(F, C, KH, KW)"] --> WC["w_col<br/>(F, C·KH·KW)"]
+    XC --> MM["w_col · x_col + b"]
+    WC --> MM
+    MM --> RS["reshape lalu transpose"]
+    RS --> O["out<br/>(N, F, oh, ow)"]
+    MM -.simpan.-> CA["cache untuk backward"]
+```
+:::
+
+**Penjelasan baris demi baris:**
+
+- **`n, c, h, w = x.shape`** — bongkar dimensi masukan: `n` batch, `c` kanal (3 untuk
+  RGB), `h`/`w` tinggi/lebar. Konvensi tensor di seluruh kode adalah `(N, C, H, W)`.
+- **`out_h`, `out_w`** — ukuran feature map keluaran, dihitung oleh helper
+  `conv_output_size(in, kernel, stride, pad)` yang menerapkan rumus slide ITB
+  `(W − N + 2P)/S + 1`. Untuk masukan 48 dengan kernel 5, pad 0, stride 1 → 44.
+- **`x_col = im2col(...)`** — inti trik: menyusun **setiap** jendela konvolusi
+  menjadi kolom. Hasilnya matriks `(C·KH·KW, N·oh·ow)` — tiap kolom satu jendela
+  yang sudah diratakan. Ini mengganti 4 loop bersarang dengan indexing vektor.
+- **`w_col = self.params["W"].reshape(...)`** — bobot `(F, C, KH, KW)` diratakan jadi
+  `(F, C·KH·KW)` agar tiap baris = satu filter yang sejajar dengan kolom `x_col`.
+- **`out = w_col @ x_col + b[:, None]`** — seluruh konvolusi jadi **satu** perkalian
+  matriks; `b[:, None]` menyiarkan (broadcast) bias per-filter ke semua posisi.
+- **`reshape` + `transpose(3, 0, 1, 2)`** — mengembalikan hasil datar `(F, N·oh·ow)`
+  ke tata letak tensor `(N, F, oh, ow)` yang diharapkan lapisan berikutnya.
+- **`self._cache = (...)`** — menyimpan `x.shape`, `x_col`, `w_col` untuk dipakai
+  saat *backward* (menghitung `dW`, `dx`) — pola "forward simpan cache, backward pakai
+  cache" yang seragam di semua lapisan.
+
+*(Modul berikutnya — ReLU, MaxPool, Dense, Dropout, Softmax+CE, optimizer, trainer,
+augmentasi, preprocessing, dan ensembel+TTA — menyusul dengan format yang sama.)*
 
 ---
 

@@ -22,7 +22,7 @@ sequenceDiagram
     Note over M: tiap lapisan isi grads[W], grads[b]
     M-->>TR: (selesai, gradien tersimpan)
     TR->>O: step()
-    Note over O: m,v ← momen gradien ; θ ← θ − η·m̂/(√v̂+ε) + L2
+    Note over O: Adam - perbarui bobot dari momen m,v (adaptif) + weight decay
     O-->>TR: bobot diperbarui
 ```
 
