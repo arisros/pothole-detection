@@ -6,12 +6,14 @@ Hanya memakai pustaka standar Python + NumPy + Pillow (tanpa Flask). Endpoint:
     POST /api/predict          -> klasifikasi citra (body = byte gambar mentah)
     GET  /<path lain>          -> berkas statis dari POTHOLES_STATIC (bila diset)
 
-Citra diproses sama persis dengan pipeline pelatihan: grayscale (0.299/0.587/0.114),
-resize 32x32, skala [0,1], standardisasi (x-mu)/sigma, lalu diumpankan ke LeNet-5
-yang bobotnya dimuat dari weights.npz.
+Citra diproses sama persis dengan pipeline pelatihan: RGB, resize 48x48,
+skala [0,1], standardisasi (x-mu)/sigma, lalu diumpankan ke ensembel LeNet-5
+(rata-rata softmax beberapa seed + test-time augmentation flip horizontal).
+Bobot per-seed dimuat dari weights_seed*.npz (fallback weights.npz tunggal).
 
 Variabel lingkungan (opsional):
-    POTHOLES_HOME     direktori berisi cnn/, weights.npz, norm_stats.json
+    POTHOLES_HOME     direktori berisi cnn/, weights.npz (+ weights_seed*.npz),
+                      norm_stats.json
     POTHOLES_STATIC   direktori berkas statis untuk disajikan (mode situs penuh)
     POTHOLES_PORT     port dengar (default 8091)
     POTHOLES_BIND     alamat bind (default 127.0.0.1; pakai 0.0.0.0 di kontainer)
@@ -53,35 +55,55 @@ except ModuleNotFoundError:
     from src.cnn.model import LeNet5  # layout lokal
 
 CLASS_NAMES = ["normal", "pothole"]
-IMG_SIZE = 32
-GRAYSCALE_COEFF = (0.299, 0.587, 0.114)
-MAX_BYTES = 8 * 1024 * 1024  # batas 8 MB per unggahan
+IMG_SIZE = 48                 # cocok dengan config.IMG_SIZE saat pelatihan
+IMG_CHANNELS = 3              # RGB
+ENSEMBLE_SEEDS = [42, 7, 123] # rata-rata softmax beberapa model
+MAX_BYTES = 8 * 1024 * 1024   # batas 8 MB per unggahan
+
+
+def _ensemble_paths():
+    """Berkas bobot per-seed bila tersedia (untuk ensembel); jika tidak, [WEIGHTS]."""
+    paths = [WEIGHTS.replace(".npz", f"_seed{s}.npz") for s in ENSEMBLE_SEEDS]
+    paths = [p for p in paths if os.path.exists(p)]
+    return paths or [WEIGHTS]
+
 
 # ---------------------------------------------------------------------------
-# Muat model sekali saat startup
+# Muat model (ensembel) sekali saat startup
 # ---------------------------------------------------------------------------
-print(f"Memuat bobot dari {WEIGHTS} ...")
-MODEL = LeNet5(seed=42).load(WEIGHTS)
+_PATHS = _ensemble_paths()
+print(f"Memuat {len(_PATHS)} bobot ensembel ...")
+MODELS = [
+    LeNet5(seed=42, in_channels=IMG_CHANNELS, img_size=IMG_SIZE).load(p)
+    for p in _PATHS
+]
 with open(NORM) as f:
     _stats = json.load(f)
 MU, SIGMA = float(_stats["mu"]), float(_stats["sigma"])
-print(f"Model siap. mu={MU:.4f} sigma={SIGMA:.4f}")
+print(f"Model siap: ensembel {len(MODELS)} model + TTA. mu={MU:.4f} sigma={SIGMA:.4f}")
 
 
 def preprocess(image_bytes):
-    """Byte gambar -> tensor (1,1,32,32) sesuai pipeline pelatihan."""
+    """Byte gambar -> tensor (1,3,48,48) sesuai pipeline pelatihan (RGB 48x48)."""
     im = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     im = im.resize((IMG_SIZE, IMG_SIZE), Image.BILINEAR)
-    arr = np.asarray(im, dtype=np.float64)
-    r, g, b = GRAYSCALE_COEFF
-    gray = (arr[..., 0] * r + arr[..., 1] * g + arr[..., 2] * b) / 255.0
-    x = (gray - MU) / SIGMA
-    return x[np.newaxis, np.newaxis, :, :]
+    arr = np.asarray(im, dtype=np.float64) / 255.0     # (H, W, 3) di [0,1]
+    chw = np.transpose(arr, (2, 0, 1))                 # (3, H, W)
+    x = (chw - MU) / SIGMA                             # standardisasi skalar global
+    return x[np.newaxis, :, :, :]                      # (1, 3, H, W)
+
+
+def _tta_proba(model, x):
+    """Rata-rata softmax citra asli + flip horizontal (test-time augmentation)."""
+    p = model.predict_proba(x)
+    p_flip = model.predict_proba(x[:, :, :, ::-1])
+    return 0.5 * (p + p_flip)
 
 
 def predict(image_bytes):
     x = preprocess(image_bytes)
-    proba = MODEL.predict_proba(x)[0]
+    # Ensembel: rata-ratakan softmax (dengan TTA) di seluruh model.
+    proba = np.mean([_tta_proba(m, x) for m in MODELS], axis=0)[0]
     pred = int(np.argmax(proba))
     return {
         "pred": pred,
@@ -107,9 +129,9 @@ class Handler(BaseHTTPRequestHandler):
         if path.rstrip("/") == "/api/health":
             self._send_json({
                 "status": "ok",
-                "model": "LeNet-5 (NumPy from scratch)",
+                "model": f"ensembel {len(MODELS)}x LeNet-5 (NumPy from scratch) + TTA",
                 "classes": CLASS_NAMES,
-                "input": f"{IMG_SIZE}x{IMG_SIZE} grayscale",
+                "input": f"{IMG_SIZE}x{IMG_SIZE} RGB",
             })
         elif STATIC_DIR:
             self._serve_static(path)
