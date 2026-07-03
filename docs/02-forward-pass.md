@@ -7,7 +7,7 @@ meneruskannya ke lapisan berikutnya.
 ## Aliran data antar lapisan
 
 ```mermaid
-flowchart LR
+flowchart TB
     X["x<br/>(N,3,48,48)"] -->|"konvolusi 6@5×5"| H1["a1<br/>(N,6,44,44)"]
     H1 -->|"ReLU max(0,·)"| H1r["(N,6,44,44)"]
     H1r -->|"max-pool 2×2"| H2["(N,6,22,22)"]

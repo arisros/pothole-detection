@@ -222,7 +222,7 @@ Tidak seperti jaringan saraf biasa, neuron pada CNN tersusun dalam tiga dimensi
 3. **Lapisan Terhubung Penuh (Fully-Connected/MLP)** — klasifikasi.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph FE["Ekstraksi Fitur"]
         c1["Konvolusi + ReLU"] --> p1["Pooling"] --> c2["Konvolusi + ReLU"] --> p2["Pooling"]
     end
@@ -370,7 +370,7 @@ Penelitian mengikuti tujuh tahap berurutan, dari pengumpulan data hingga
 visualisasi, sebagaimana digambarkan pada diagram berikut.
 
 ```mermaid
-flowchart LR
+flowchart TB
     A[("Dataset publik")] --> B["Unduh"]
     B --> C["Pelabelan"]
     C --> D["Preprocessing<br/>RGB · 48×48 · normalisasi · augmentasi daring · split"]
@@ -571,7 +571,7 @@ Inisialisasi He dipakai pada lapisan ber-ReLU, Xavier pada lapisan keluaran.
 ### 3.6.7 Aliran Gradien Mundur
 
 ```mermaid
-flowchart RL
+flowchart TB
     P["Loss"] -->|"p − y"| Z["skor z"]
     Z -->|"dW, dx"| F["FC × 3"]
     F -->|"turunan ReLU"| R["ReLU"]
@@ -928,7 +928,7 @@ def forward(self, x):
     return out
 ```
 ```mermaid
-flowchart LR
+flowchart TB
     X["x<br/>(N, C, H, W)"] --> IM["im2col<br/>tiap jendela → 1 kolom"]
     IM --> XC["x_col<br/>(C·KH·KW, N·oh·ow)"]
     W["W (bobot)<br/>(F, C, KH, KW)"] --> WC["w_col<br/>(F, C·KH·KW)"]
