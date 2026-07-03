@@ -40,7 +40,7 @@
       ReLU, softmax, cross-entropy, hingga <b>backpropagation</b> — dikodekan tangan dengan NumPy.
       Tanpa PyTorch, tanpa TensorFlow, tanpa autograd. Setiap gradien dibuktikan benar.</p>
     <div class="statline">
-      <span><b>75,7%</b> akurasi uji</span><span class="sep">/</span>
+      <span><b>94,4%</b> akurasi uji</span><span class="sep">/</span>
       <span><b>712</b> citra</span><span class="sep">/</span>
       <span><b>0</b> framework DL</span><span class="sep">/</span>
       <span>galat gradien <b>10⁻⁹</b></span>
@@ -51,7 +51,7 @@
   <section id="demo">
     <p class="seclabel"><b>01</b> · coba modelnya</p>
     <h2>Beri model sebuah foto jalan.</h2>
-    <p class="sub">Model LeNet-5 (NumPy murni) berjalan langsung di server dan menebak apakah
+    <p class="sub">Ensembel 3 model LeNet-5 (NumPy murni) berjalan langsung di server dan menebak apakah
       permukaan jalan <b>berlubang</b> atau <b>normal</b>.</p>
     <div class="demo">
       <div class="panel" style="padding:20px; display:flex; flex-direction:column">
@@ -76,7 +76,7 @@
           <div class="row"><span class="nm">pothole · berlubang</span><span class="pct" id="pPothole">—</span></div>
           <div class="track"><div class="fill pothole" id="fPothole"></div></div>
         </div>
-        <p class="disclaim">Dilatih pada data & resolusi terbatas (32×32 grayscale). Prediksi
+        <p class="disclaim">Dilatih pada dataset terbatas (712 citra, RGB 48×48). Prediksi
           bersifat ilustratif untuk memperlihatkan cara kerja CNN — bukan untuk penggunaan kritis.</p>
       </div>
     </div>
@@ -88,16 +88,16 @@
     <p class="sub">Data uji tak pernah dilihat model saat pelatihan. Metrik dihitung manual dari
       confusion matrix.</p>
     <div class="stats">
-      <div class="cell"><div class="val">75,7%</div><div class="lbl">Akurasi</div></div>
-      <div class="cell"><div class="val">78,4%</div><div class="lbl">Presisi</div></div>
-      <div class="cell"><div class="val">72,7%</div><div class="lbl">Recall</div></div>
-      <div class="cell"><div class="val">75,5%</div><div class="lbl">F1-score</div></div>
+      <div class="cell"><div class="val">94,4%</div><div class="lbl">Akurasi</div></div>
+      <div class="cell"><div class="val">91,5%</div><div class="lbl">Presisi</div></div>
+      <div class="cell"><div class="val">98,2%</div><div class="lbl">Recall</div></div>
+      <div class="cell"><div class="val">94,7%</div><div class="lbl">F1-score</div></div>
     </div>
     <div class="figs">
       <figure><img src="figures/confusion_matrix.png" alt="confusion matrix">
-        <figcaption>Confusion matrix — TP 40, TN 41, FP 11, FN 15.</figcaption></figure>
+        <figcaption>Confusion matrix — TP 54, TN 47, FP 5, FN 1.</figcaption></figure>
       <figure><img src="figures/training_curves.png" alt="kurva pelatihan">
-        <figcaption>Kurva pelatihan — overfitting muncul setelah ±epoch 6.</figcaption></figure>
+        <figcaption>Kurva pelatihan — val-acc terbaik 89,7% (epoch 25); overfitting terkendali.</figcaption></figure>
     </div>
   </section>
 
@@ -105,15 +105,15 @@
     <p class="seclabel"><b>03</b> · arsitektur</p>
     <h2>Aliran data melewati tiap hidden layer.</h2>
     <p class="sub">Ukuran tiap <i>feature map</i> dihitung dengan rumus (W − N + 2P)/S + 1:
-      32 → 28 → 14 → 10 → 5.</p>
+      48 → 44 → 22 → 18 → 9.</p>
     <div class="diagram">
       <div class="mermaid">
 flowchart LR
-    A["Input<br/>1×32×32"] --> B["Conv1 6@5×5 · ReLU<br/>6×28×28"]
-    B --> C["MaxPool<br/>6×14×14"]
-    C --> D["Conv2 16@5×5 · ReLU<br/>16×10×10"]
-    D --> E["MaxPool<br/>16×5×5"]
-    E --> F["Flatten<br/>400"]
+    A["Input<br/>3×48×48"] --> B["Conv1 6@5×5 · ReLU<br/>6×44×44"]
+    B --> C["MaxPool<br/>6×22×22"]
+    C --> D["Conv2 16@5×5 · ReLU<br/>16×18×18"]
+    D --> E["MaxPool<br/>16×9×9"]
+    E --> F["Flatten<br/>1296"]
     F --> G["FC-120"] --> H["FC-84"] --> I["Softmax<br/>normal / pothole"]
       </div>
     </div>
@@ -154,8 +154,8 @@ flowchart LR
       <a href="viewer.html?doc=makalah">Makalah</a>
       <a href="viewer.html?doc=06-formula">Formula</a>
     </div>
-    <p class="meta">Arsitektur LeNet-5 · notasi mengikuti slide Rinaldi Munir (ITB, 2024) ·
-      seluruh hasil reproducible (seed = 42).</p>
+    <p class="meta">Arsitektur LeNet-5 (ensembel 3 model) · notasi mengikuti slide Rinaldi Munir (ITB, 2024) ·
+      seluruh hasil reproducible (seed = 42, 7, 123).</p>
   </div>
 </footer>
 
@@ -171,6 +171,6 @@ flowchart LR
     }
   });
 </script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
