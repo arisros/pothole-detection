@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -49,6 +49,7 @@
     <a href="viewer.html?doc=04-training-loop">04 · Training</a>
     <a href="viewer.html?doc=05-struktur-kode">05 · Kode</a>
     <a href="viewer.html?doc=06-formula">06 · Formula</a>
+    <a href="viewer.html?doc=07-glosarium">07 · Glosarium</a>
     <a href="viewer.html?doc=makalah" style="color:var(--orange)">★ Makalah</a>
   </nav>
   <article class="md" id="content"><div class="spinner">memuat…</div></article>
@@ -102,6 +103,12 @@ fetch("content/" + doc + ".md")
     el.querySelectorAll("a").forEach((a) => {
       const h = a.getAttribute("href") || "";
       if (h.endsWith(".md")) a.setAttribute("href", "viewer.html?doc=" + h.split("/").pop().replace(/\.md$/, ""));
+    });
+    // Tandai blockquote callout awam ("💡") / cara-baca-rumus ("📐") untuk gaya khusus.
+    el.querySelectorAll("blockquote").forEach((bq) => {
+      const t = (bq.textContent || "").replace(/^\s+/, "");
+      if (t.startsWith("💡")) bq.classList.add("callout", "callout-tip");
+      else if (t.startsWith("📐")) bq.classList.add("callout", "callout-math");
     });
     el.querySelectorAll("code.language-mermaid").forEach((c) => {
       const d = document.createElement("div"); d.className = "mermaid"; d.textContent = c.textContent;
