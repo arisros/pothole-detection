@@ -55,13 +55,13 @@ flowchart TB
 ## Tiga lapisan utama CNN
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph FE["Ekstraksi Fitur"]
-        direction LR
+        direction TB
         c1["Konvolusi + ReLU"] --> p1["Pooling"] --> c2["Konvolusi + ReLU"] --> p2["Pooling"]
     end
     subgraph CL["Klasifikasi"]
-        direction LR
+        direction TB
         fl["Flatten"] --> d1["FC + ReLU"] --> d2["FC + ReLU"] --> sm["FC + Softmax"]
     end
     FE --> CL
