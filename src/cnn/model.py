@@ -1,20 +1,22 @@
-"""Model LeNet-5 (disesuaikan untuk citra 32x32x1 dan 2 kelas).
+"""Model LeNet-5 (varian modern) untuk citra RGB 48x48, 2 kelas.
 
-Aliran dimensi tiap lapisan (rumus ukuran: (W - N + 2P)/S + 1):
+Aliran dimensi tiap lapisan (rumus ukuran: (W - N + 2P)/S + 1), untuk masukan
+RGB 48x48 yang dipakai pipeline:
 
-    Input            1 x 32 x 32
-    Conv1 6@5x5  ->  6 x 28 x 28   (32 - 5 + 0)/1 + 1 = 28
-    MaxPool 2x2  ->  6 x 14 x 14   (28 - 2)/2 + 1     = 14
-    Conv2 16@5x5 -> 16 x 10 x 10   (14 - 5)/1 + 1     = 10
-    MaxPool 2x2  -> 16 x  5 x  5   (10 - 2)/2 + 1     = 5
-    Flatten      -> 400
+    Input            3 x 48 x 48
+    Conv1 6@5x5  ->  6 x 44 x 44   (48 - 5 + 0)/1 + 1 = 44
+    MaxPool 2x2  ->  6 x 22 x 22   (44 - 2)/2 + 1     = 22
+    Conv2 16@5x5 -> 16 x 18 x 18   (22 - 5)/1 + 1     = 18
+    MaxPool 2x2  -> 16 x  9 x  9   (18 - 2)/2 + 1     = 9
+    Flatten      -> 1296
     FC-120       -> 120
     FC-84        ->  84
     FC-2         ->   2  (softmax: normal / pothole)
 
-LeNet asli memakai average pooling + sigmoid. Di sini dipakai varian modern
-ReLU + max pooling karena lebih stabil dilatih, namun tetap "minim magic":
-seluruh forward & backward ditulis manual.
+Ukuran & jumlah kanal masukan dapat diatur lewat argumen (in_channels, img_size);
+flat_dim dihitung dinamis. LeNet asli memakai average pooling + sigmoid; di sini
+dipakai varian modern ReLU + max pooling yang lebih stabil dilatih, namun tetap
+"minim magic": seluruh forward & backward ditulis manual.
 """
 from __future__ import annotations
 

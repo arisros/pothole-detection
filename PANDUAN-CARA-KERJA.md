@@ -357,8 +357,8 @@ def numerical_grad(f, x, dout, eps=1e-5):
   "pergerakan hidden layer".
 
 **Hasil nyata (test set, ensembel + TTA):** Akurasi **94,4%**, Presisi **91,5%**, Recall **98,2%**, F1 **94,7%**.
-Naik tajam dari baseline 75,7% berkat RGB 48×48 + regularisasi (weight decay/dropout) + augmentasi
-daring + ensembel 3 seed; overfitting kini terkendali (val-acc terbaik ~89,7% @ epoch 25).
+Dicapai dengan RGB 48×48 + regularisasi (weight decay/dropout) + augmentasi
+daring + ensembel 3 seed; overfitting terkendali (val-acc terbaik ~89,7% @ epoch 25).
 
 ---
 

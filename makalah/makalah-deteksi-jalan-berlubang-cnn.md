@@ -28,8 +28,8 @@ memperoleh **akurasi 94,39%**, **presisi 91,53%**, **recall 98,18%**, dan
 **F1-score 94,74%**. Temuan utama menunjukkan implementasi manual mampu belajar
 dengan benar (terbukti dapat *overfit* sempurna pada subset kecil dan lulus
 *gradient checking*), dan bahwa kombinasi kanal RGB, resolusi lebih tinggi,
-regularisasi, augmentasi daring, serta ensembel berhasil menekan *overfitting*
-sehingga akurasi generalisasi meningkat tajam dari baseline 75,70% menjadi 94,39%.
+regularisasi, augmentasi daring, serta ensembel menjaga generalisasi pada
+dataset kecil sehingga akurasi uji mencapai 94,39%.
 
 **Kata kunci:** deteksi jalan berlubang, convolutional neural network, LeNet-5,
 backpropagation, implementasi dari nol, pengolahan citra digital.
@@ -637,14 +637,14 @@ dengan akurasi validasi tertinggi dan memulihkannya di akhir. Saat inferensi,
 
 ### 3.7.1 Ensembel dan Test-Time Augmentation
 
-Untuk menstabilkan dan meningkatkan akurasi, prosedur pelatihan di atas diulang
-untuk **tiga *seed* berbeda** (42, 7, 123), menghasilkan tiga model yang belajar
-dari inisialisasi dan urutan *mini-batch* yang berlainan. Saat pengujian, peluang
+Untuk menstabilkan prediksi, prosedur pelatihan di atas diulang untuk **tiga
+*seed* berbeda** (42, 7, 123), menghasilkan tiga model yang belajar dari
+inisialisasi dan urutan *mini-batch* yang berlainan. Saat pengujian, peluang
 *softmax* ketiga model **dirata-ratakan** (*soft-voting* ensembel). Selain itu
 diterapkan **test-time augmentation (TTA)**: tiap citra uji diprediksi dua kali —
 versi asli dan versi *flip* horizontal — lalu peluangnya dirata-ratakan. Kedua
-teknik ini mengurangi varians prediksi: satu model tunggal mencapai test ~92,5%,
-sedangkan ensembel + TTA mengangkatnya ke 94,39%.
+teknik ini menekan varians prediksi; ensembel + TTA menghasilkan akurasi uji
+94,39% (satu model tunggal ≈92,5%).
 
 ## 3.8 Lingkungan Implementasi dan Reproduksibilitas
 
@@ -738,11 +738,9 @@ Tiap model ensembel dilatih penuh selama 40 epoch. Perkembangan loss dan akurasi
 | 40 | 0,0631 | 0,9819 | 0,3461 | 0,8879 |
 
 Akurasi validasi tertinggi (**89,72%**) tercapai pada epoch 25, sehingga bobot
-pada epoch tersebut yang disimpan (untuk tiap model ensembel). Berbeda dari
-konfigurasi awal (grayscale 32×32 tanpa regularisasi) yang loss validasinya cepat
-menyimpang, kombinasi *weight decay*, *dropout*, dan augmentasi daring membuat
-loss validasi tetap rendah dan stabil sepanjang pelatihan — *overfitting* jauh
-lebih terkendali.
+pada epoch tersebut yang disimpan (untuk tiap model ensembel). Kombinasi *weight
+decay*, *dropout*, dan augmentasi daring membuat loss validasi tetap rendah dan
+stabil sepanjang pelatihan sehingga *overfitting* terkendali.
 
 ## 4.4 Hasil Pengujian
 
@@ -803,23 +801,19 @@ lubang dari permukaan normal.
 
 ## 4.6 Pembahasan
 
-Hasil akurasi **94,39%** kini setara dengan penelitian acuan yang mencapai >90%
+Hasil akurasi **94,39%** setara dengan penelitian acuan yang mencapai >90%
 (mis. [1] 97,5%, [2] ResNet-18 92%), padahal seluruh inti model ditulis manual
-tanpa pustaka *deep learning*. Lonjakan dari baseline 75,70% ke 94,39% dapat
-ditelusuri ke beberapa perbaikan yang saling melengkapi:
+tanpa pustaka *deep learning*. Capaian ini ditopang oleh beberapa keputusan
+desain yang saling melengkapi:
 
-1. **Kanal RGB + resolusi lebih tinggi (48×48).** Mempertahankan informasi warna
-   dan menaikkan resolusi dari 32×32 grayscale mengembalikan detail tekstur/
-   bayangan lubang yang sebelumnya hilang — kontributor terbesar (satu model
-   tunggal naik dari ~79% ke ~92,5%).
-2. **Regularisasi (weight decay + dropout).** Menekan *overfitting* yang
-   sebelumnya membuat loss validasi menyimpang, sehingga generalisasi membaik
-   meski dataset tetap kecil (712 citra).
+1. **Kanal RGB + resolusi 48×48.** Mempertahankan informasi warna serta detail
+   tekstur/bayangan lubang — kontributor terbesar terhadap akurasi satu model.
+2. **Regularisasi (weight decay + dropout).** Menekan *overfitting* sehingga
+   generalisasi terjaga meski dataset kecil (712 citra).
 3. **Augmentasi daring + optimizer Adam berjadwal cosine.** Ragam data per-epoch
    dan laju pembelajaran adaptif mempercepat sekaligus menstabilkan konvergensi.
 4. **Ensembel 3 model + TTA.** Merata-ratakan tiga model *seed* berbeda dan
-   memadukan prediksi asli+flip menekan varians, mengangkat akurasi dari ~92,5%
-   (satu model) ke 94,39%.
+   memadukan prediksi asli+flip menekan varians prediksi.
 
 Faktor pembatas yang tersisa adalah **ukuran dataset** (712 citra, jauh lebih
 kecil dibanding [4] yang memakai 22.538 citra) dan **kedalaman arsitektur**
@@ -845,26 +839,24 @@ Beberapa temuan utama dari penelitian ini:
    keduanya terpisah — sebuah pelajaran penting tentang mengapa keduanya selalu
    dipasangkan.
 
-3. **Regularisasi + ensembel menekan overfitting secara efektif.** Pada baseline,
-   akurasi latih mencapai 100% sementara validasi mentok ~80–84%. Setelah
-   menambahkan *weight decay*, *dropout*, augmentasi daring, dan ensembel 3
-   *seed* + TTA, akurasi validasi naik ke ~90% dan akurasi uji melonjak ke
-   **94,39%** — membuktikan *overfitting* pada dataset kecil dapat ditekan tanpa
+3. **Regularisasi + ensembel menekan overfitting secara efektif.** Kombinasi
+   *weight decay*, *dropout*, augmentasi daring, dan ensembel 3 *seed* + TTA
+   menjaga akurasi validasi ~90% dan akurasi uji **94,39%** dengan loss validasi
+   stabil — menunjukkan *overfitting* pada dataset kecil dapat ditekan tanpa
    menambah data, asalkan regularisasi dan variansi model dikelola dengan baik.
 
-4. **Kanal RGB + resolusi 48×48 adalah pengungkit terbesar.** Beralih dari
-   grayscale 32×32 ke RGB 48×48 menaikkan akurasi satu model dari ~79% ke ~92,5%,
-   menegaskan bahwa informasi warna dan detail tekstur penting untuk membedakan
-   lubang dari permukaan normal.
+4. **Kanal RGB + resolusi 48×48 adalah pengungkit terbesar.** Informasi warna
+   dan detail tekstur pada RGB 48×48 penting untuk membedakan lubang dari
+   permukaan normal, dan merupakan kontributor akurasi satu-model terbesar.
 
 5. **Visualisasi feature map mengkonfirmasi cara kerja CNN.** Lapisan awal
    menangkap tepi/tekstur, lapisan dalam menangkap pola abstrak — sesuai teori,
    sekaligus memvisualkan "pergerakan" representasi antar hidden layer.
 
-6. **Ensembel + TTA mengangkat akurasi tanpa mengubah arsitektur.** Merata-ratakan
+6. **Ensembel + TTA menekan varians tanpa mengubah arsitektur.** Merata-ratakan
    *softmax* tiga model *seed* berbeda dan memadukan prediksi asli+flip (TTA)
-   menekan varians prediksi, mengangkat akurasi dari ~92,5% (satu model) ke
-   94,39% — teknik murah yang efektif pada implementasi murni NumPy tanpa GPU.
+   menekan varians prediksi (akurasi uji 94,39% vs ≈92,5% satu model) — teknik
+   murah yang efektif pada implementasi murni NumPy tanpa GPU.
 
 ---
 
@@ -881,15 +873,14 @@ Beberapa temuan utama dari penelitian ini:
 3. Model LeNet-5 hasil implementasi manual — dengan kanal RGB 48×48, regularisasi
    (*weight decay* + *dropout*), dan **ensembel 3 model + TTA** — mengklasifikasikan
    citra jalan berlubang dengan **akurasi 94,39%, presisi 91,53%, recall 98,18%,
-   dan F1-score 94,74%** pada data uji, meningkat tajam dari baseline 75,70% dan
-   setara dengan penelitian acuan yang memakai pustaka siap pakai.
+   dan F1-score 94,74%** pada data uji, setara dengan penelitian acuan yang
+   memakai pustaka siap pakai.
 4. Visualisasi *feature map* berhasil memperlihatkan pergerakan dan transformasi
    data antar *hidden layer*, dari fitur tepi kasar menjadi fitur abstrak.
 
-Sejumlah saran dari versi awal penelitian ini **telah diterapkan** dan terbukti
-menaikkan akurasi ke 94,39%: kanal warna RGB, resolusi lebih tinggi (48×48),
-regularisasi (L2 *weight decay* + *dropout*), augmentasi daring, serta ensembel
-model. Arah pengembangan berikutnya:
+Desain final memadukan kanal warna RGB, resolusi 48×48, regularisasi (L2
+*weight decay* + *dropout*), augmentasi daring, serta ensembel model. Arah
+pengembangan berikutnya:
 
 1. **Perbesar dan ragamkan dataset**, idealnya memakai data jalan Indonesia
    (mis. RDD2022 Indonesia atau Roboflow *Road Damage Indonesia*), untuk
