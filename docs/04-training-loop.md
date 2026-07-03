@@ -10,7 +10,7 @@ sequenceDiagram
     participant TR as Trainer
     participant M as Model (LeNet-5)
     participant L as SoftmaxCrossEntropy
-    participant O as SGDMomentum
+    participant O as Adam
 
     TR->>M: forward(x_batch)
     M-->>TR: scores (N,2)
@@ -22,7 +22,7 @@ sequenceDiagram
     Note over M: tiap lapisan isi grads[W], grads[b]
     M-->>TR: (selesai, gradien tersimpan)
     TR->>O: step()
-    Note over O: v ← μv − lr·∇ ; θ ← θ + v
+    Note over O: m,v ← momen gradien ; θ ← θ − η·m̂/(√v̂+ε) + L2
     O-->>TR: bobot diperbarui
 ```
 
@@ -44,25 +44,33 @@ flowchart TB
     J --> K
 ```
 
-## Aturan pembaruan (SGD + momentum)
+## Aturan pembaruan (Adam)
 
-Untuk tiap parameter θ dengan gradien ∇:
+Adam mengadaptasi laju tiap parameter θ dari estimasi momen pertama (m) dan kedua
+(v) gradien ∇:
 
-$$v \leftarrow \mu\,v - \eta\,\nabla \qquad \theta \leftarrow \theta + v$$
+$$m \leftarrow \beta_1 m + (1-\beta_1)\nabla,\quad
+v \leftarrow \beta_2 v + (1-\beta_2)\nabla^2,\quad
+\theta \leftarrow \theta - \eta\,\frac{\hat m}{\sqrt{\hat v}+\varepsilon}$$
 
-dengan η (learning rate) = 0.01 dan μ (momentum) = 0.9.
+dengan η = 1e-3 (meluruh mengikuti jadwal *cosine*) dan L2 *weight decay* 1e-4
+ditambahkan pada gradien bobot W. (Optimizer `SGDMomentum` juga tersedia sebagai
+alternatif.)
 
 ## Hyperparameter pelatihan
 
 | Parameter | Nilai |
 |-----------|-------|
-| Learning rate (η) | 0.01 |
-| Momentum (μ) | 0.9 |
+| Learning rate (η) | 1e-3 (Adam) |
+| Jadwal LR | cosine decay |
+| Weight decay (L2) | 1e-4 (hanya W) |
+| Dropout (FC) | 0.3 |
 | Batch size | 32 |
-| Epoch | 15 |
-| Optimizer | SGD + momentum |
+| Epoch | 40 |
+| Optimizer | Adam |
 | Loss | Cross-entropy |
 | Inisialisasi | He (Conv/FC ber-ReLU), Xavier (output) |
+| Ensembel (seed) | 42, 7, 123 (rata-rata softmax) + TTA |
 
 ## Pemilihan bobot terbaik (early stopping ringan)
 

@@ -16,13 +16,13 @@ config.py            Hyperparameter & path terpusat
 src/
   download_data.py   Unduh dataset publik pothole/normal
   label_dataset.py   Susun kelas -> labels.csv
-  preprocess.py      Grayscale, resize 32x32, normalisasi, augmentasi, split
+  preprocess.py      RGB, resize 48x48, normalisasi, augmentasi daring, split
   cnn/               INTI MANUAL (tanpa autograd)
     tensor_utils.py  im2col / col2im
     init.py          Inisialisasi He / Xavier
     layers.py        Conv2D, MaxPool2D, ReLU, Flatten, Dense (forward+backward)
     losses.py        Softmax + Cross-Entropy
-    optim.py         SGD + momentum
+    optim.py         SGD-momentum & Adam (default) + cosine LR, weight decay
     metrics.py       Akurasi, presisi, recall, F1, confusion matrix
     model.py         LeNet-5
     trainer.py       Training loop mini-batch
@@ -53,12 +53,12 @@ make visualize   # peta fitur antar lapisan
 ## Arsitektur (aliran dimensi tiap lapisan)
 
 ```
-Input 1x32x32
-  -> Conv1 6@5x5 + ReLU   -> 6x28x28
-  -> MaxPool 2x2          -> 6x14x14
-  -> Conv2 16@5x5 + ReLU  -> 16x10x10
-  -> MaxPool 2x2          -> 16x5x5
-  -> Flatten              -> 400
+Input 3x48x48
+  -> Conv1 6@5x5 + ReLU   -> 6x44x44
+  -> MaxPool 2x2          -> 6x22x22
+  -> Conv2 16@5x5 + ReLU  -> 16x18x18
+  -> MaxPool 2x2          -> 16x9x9
+  -> Flatten              -> 1296
   -> FC-120 + ReLU
   -> FC-84  + ReLU
   -> FC-2   + Softmax     -> {normal, pothole}
