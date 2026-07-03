@@ -25,44 +25,65 @@ from .losses import softmax
 
 
 class LeNet5:
+    """CNN dengan tumpukan konvolusi yang dapat dikonfigurasi.
+
+    `conv_specs` = daftar (out_channels, kernel) per blok konv; tiap blok =
+    Conv2D -> ReLU -> MaxPool. Default [(6,5),(16,5)] = LeNet-5 klasik (dua blok).
+    Tumpukan lebih dalam (mis. tiga blok) berguna untuk masukan beresolusi lebih
+    besar (64px) agar bidang reseptif memadai dan dimensi flatten tetap ramping.
+    """
+
     def __init__(self, num_classes=2, conv1=6, conv2=16, fc1=120, fc2=84,
                  kernel=5, pool=2, seed=42, dropout_p=0.0,
-                 in_channels=1, img_size=32):
+                 in_channels=1, img_size=32, conv_specs=None):
         rng = np.random.default_rng(seed)
+        if conv_specs is None:
+            conv_specs = [(conv1, kernel), (conv2, kernel)]
 
-        self.conv1 = Conv2D(in_channels, conv1, kernel, stride=1, pad=0, rng=rng)
-        self.relu1 = ReLU()
-        self.pool1 = MaxPool2D(pool)
-        self.conv2 = Conv2D(conv1, conv2, kernel, stride=1, pad=0, rng=rng)
-        self.relu2 = ReLU()
-        self.pool2 = MaxPool2D(pool)
-        self.flatten = Flatten()
-
-        # Aliran dimensi spasial: conv (k) mengurangi (k-1), pool membagi 2.
-        # Dihitung dinamis agar mendukung IMG_SIZE selain 32 (mis. 48, 64).
+        # ----- Tumpukan konvolusi (dinamis) -----
+        self.conv_stages = []   # [(conv, relu, pool), ...] untuk introspeksi
+        layers = []
         s = img_size
-        s = (s - (kernel - 1)) // pool          # setelah conv1 + pool1
-        s = (s - (kernel - 1)) // pool          # setelah conv2 + pool2
+        prev = in_channels
+        for i, (ch, k) in enumerate(conv_specs, 1):
+            conv = Conv2D(prev, ch, k, stride=1, pad=0, rng=rng)
+            relu = ReLU()
+            mp = MaxPool2D(pool)
+            self.conv_stages.append((conv, relu, mp))
+            layers += [conv, relu, mp]
+            # Alias bernomor untuk kompatibilitas (mis. visualize.py).
+            setattr(self, f"conv{i}", conv)
+            setattr(self, f"relu{i}", relu)
+            setattr(self, f"pool{i}", mp)
+            # Aliran dimensi spasial: conv (k) mengurangi (k-1), pool membagi.
+            s = (s - (k - 1)) // pool
+            prev = ch
+        if s <= 0:
+            raise ValueError(
+                f"img_size={img_size} terlalu kecil untuk {len(conv_specs)} "
+                f"blok konv (feat_size={s}). Kurangi blok atau perbesar input.")
         self.feat_size = s
-        flat_dim = conv2 * s * s
+
+        # ----- Kepala terhubung penuh -----
+        flat_dim = prev * s * s
+        self.flatten = Flatten()
         self.fc1 = Dense(flat_dim, fc1, rng=rng, init="he")
-        self.relu3 = ReLU()
-        # Dropout pada lapisan terhubung penuh (regularisasi). p=0 -> identitas.
+        self.relu_fc1 = ReLU()
+        # Dropout pada lapisan FC (regularisasi). p=0 -> identitas.
         self.drop1 = Dropout(dropout_p, seed=seed + 1)
         self.fc2 = Dense(fc1, fc2, rng=rng, init="he")
-        self.relu4 = ReLU()
+        self.relu_fc2 = ReLU()
         self.drop2 = Dropout(dropout_p, seed=seed + 2)
         self.fc3 = Dense(fc2, num_classes, rng=rng, init="xavier")
 
-        # Urutan lapisan untuk forward/backward dan iterasi parameter.
-        self.layers = [
-            self.conv1, self.relu1, self.pool1,
-            self.conv2, self.relu2, self.pool2,
+        layers += [
             self.flatten,
-            self.fc1, self.relu3, self.drop1,
-            self.fc2, self.relu4, self.drop2,
+            self.fc1, self.relu_fc1, self.drop1,
+            self.fc2, self.relu_fc2, self.drop2,
             self.fc3,
         ]
+        # Urutan lapisan untuk forward/backward dan iterasi parameter.
+        self.layers = layers
 
     def train(self):
         """Aktifkan mode latih (dropout hidup) pada semua lapisan."""

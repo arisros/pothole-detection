@@ -25,18 +25,16 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 
 def forward_capture(model, x):
-    """Jalankan forward sambil menangkap keluaran tahap-tahap kunci."""
+    """Jalankan forward sambil menangkap keluaran tiap blok konv (dinamis)."""
     stages = {}
-    out = model.conv1.forward(x)
-    out = model.relu1.forward(out)
-    stages["Conv1+ReLU (6x28x28)"] = out
-    out = model.pool1.forward(out)
-    stages["Pool1 (6x14x14)"] = out
-    out = model.conv2.forward(out)
-    out = model.relu2.forward(out)
-    stages["Conv2+ReLU (16x10x10)"] = out
-    out = model.pool2.forward(out)
-    stages["Pool2 (16x5x5)"] = out
+    out = x
+    for i, (conv, relu, pool) in enumerate(model.conv_stages, 1):
+        out = relu.forward(conv.forward(out))
+        c, h, w = out.shape[1:]
+        stages[f"Conv{i}+ReLU ({c}x{h}x{w})"] = out
+        out = pool.forward(out)
+        c, h, w = out.shape[1:]
+        stages[f"Pool{i} ({c}x{h}x{w})"] = out
     return stages
 
 
@@ -49,8 +47,14 @@ def plot_feature_maps(image, stages, title, path_out):
     # Baris 0: citra masukan (hanya kolom pertama).
     for col in range(max_maps):
         ax = axes[0, col]; ax.axis("off")
-    axes[0, 0].imshow(image[0], cmap="gray")
-    axes[0, 0].set_title("Input 1x32x32", fontsize=8)
+    if image.shape[0] == 1:
+        axes[0, 0].imshow(image[0], cmap="gray")
+    else:
+        disp = np.transpose(image, (1, 2, 0))
+        disp = (disp - disp.min()) / (disp.ptp() + 1e-8)
+        axes[0, 0].imshow(disp)
+    axes[0, 0].set_title(f"Input {image.shape[0]}x{image.shape[1]}x{image.shape[2]}",
+                         fontsize=8)
 
     for row, (name, fmap) in enumerate(stages.items(), start=1):
         maps = fmap[0]  # (C, H, W)

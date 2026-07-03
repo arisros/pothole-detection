@@ -61,6 +61,13 @@ POOL_SIZE = 2
 FC1_UNITS = 120
 FC2_UNITS = 84
 
+# Tumpukan konvolusi: daftar (out_channels, kernel) per blok (Conv->ReLU->Pool).
+# Juara: dua blok gaya LeNet-5 pada RGB 48px -> test 94.4% (ensembel 3-seed + TTA).
+# Catatan eksperimen: tumpukan 3 blok kernel 3x3 pada 64px dicoba dan setara
+# (93.5%, dalam derau uji 107 citra) tetapi ~2x lebih lambat, jadi 48px tetap
+# dipakai. Untuk mencoba 64px: IMG_SIZE=64, CONV_SPECS=[(16,3),(32,3),(64,3)].
+CONV_SPECS = [(CONV1_FILTERS, KERNEL_SIZE), (CONV2_FILTERS, KERNEL_SIZE)]
+
 # ---------------------------------------------------------------------------
 # Pelatihan
 # ---------------------------------------------------------------------------

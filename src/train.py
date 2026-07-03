@@ -35,7 +35,8 @@ def sanity_overfit(x_train, y_train):
     # Tanpa regularisasi/augmentasi: ini murni uji kebenaran backprop —
     # model HARUS mampu menghafal 32 sampel.
     m = LeNet5(seed=config.SEED, dropout_p=0.0,
-               in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE)
+               in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE,
+               conv_specs=config.CONV_SPECS)
     t = Trainer(m, lr=config.LEARNING_RATE, momentum=config.MOMENTUM,
                 batch_size=16, seed=config.SEED,
                 weight_decay=0.0, augment=False, optimizer=config.OPTIMIZER)
@@ -73,7 +74,8 @@ def main():
     for i, seed in enumerate(seeds):
         print(f"\n[Pelatihan penuh] model {i + 1}/{len(seeds)} (seed={seed})")
         model = LeNet5(seed=seed, dropout_p=config.DROPOUT_P,
-                       in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE)
+                       in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE,
+                       conv_specs=config.CONV_SPECS)
         trainer = Trainer(model, lr=config.LEARNING_RATE, momentum=config.MOMENTUM,
                           batch_size=config.BATCH_SIZE, seed=seed,
                           weight_decay=config.WEIGHT_DECAY,

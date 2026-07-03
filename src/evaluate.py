@@ -25,9 +25,9 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 
 def _new_model():
-    """Bangun LeNet5 sesuai konfigurasi input aktif (channel & ukuran)."""
+    """Bangun LeNet5 sesuai konfigurasi input & arsitektur aktif."""
     return LeNet5(seed=config.SEED, in_channels=config.IMG_CHANNELS,
-                  img_size=config.IMG_SIZE)
+                  img_size=config.IMG_SIZE, conv_specs=config.CONV_SPECS)
 
 
 def tta_proba(model, x, batch_size=64):
