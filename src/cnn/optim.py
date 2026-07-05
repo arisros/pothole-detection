@@ -51,7 +51,7 @@ class SGDMomentum:
 
 
 class Adam:
-    """Adam — adaptive moment estimation (ditulis manual dengan NumPy).
+    """Adam ,  adaptive moment estimation (ditulis manual dengan NumPy).
 
     Menyimpan rata-rata bergerak momen pertama (m) dan kedua (v) tiap parameter,
     lalu memperbarui dengan koreksi bias:

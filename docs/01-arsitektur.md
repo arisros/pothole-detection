@@ -1,4 +1,4 @@
-# 01 — Arsitektur LeNet-5 & Aliran Dimensi Hidden Layer
+# 01, Arsitektur LeNet-5 & Aliran Dimensi Hidden Layer
 
 Dokumen ini memperlihatkan **pergerakan data** saat melewati tiap hidden layer
 CNN, lengkap dengan perubahan bentuk (dimensi) tensor.
@@ -42,15 +42,15 @@ flowchart TB
 
 | Tahap | Operasi | Rumus | Keluaran |
 |-------|---------|-------|----------|
-| Input | — | — | 3 × 48 × 48 |
+| Input |, |, | 3 × 48 × 48 |
 | Conv1 | 6×(5×5), P=0, S=1 | (48 − 5 + 0)/1 + 1 = 44 | 6 × 44 × 44 |
 | Pool1 | max 2×2, S=2 | (44 − 2)/2 + 1 = 22 | 6 × 22 × 22 |
 | Conv2 | 16×(5×5), P=0, S=1 | (22 − 5 + 0)/1 + 1 = 18 | 16 × 18 × 18 |
 | Pool2 | max 2×2, S=2 | (18 − 2)/2 + 1 = 9 | 16 × 9 × 9 |
-| Flatten | 16·9·9 | — | 1296 |
-| FC1 | 1296 → 120 | — | 120 |
-| FC2 | 120 → 84 | — | 84 |
-| FC3 | 84 → 2 | — | 2 |
+| Flatten | 16·9·9 |, | 1296 |
+| FC1 | 1296 → 120 |, | 120 |
+| FC2 | 120 → 84 |, | 84 |
+| FC3 | 84 → 2 |, | 2 |
 
 ## Tiga lapisan utama CNN
 
@@ -67,9 +67,9 @@ flowchart TB
     FE --> CL
 ```
 
-- **Lapisan Konvolusi (+ReLU)** — mendeteksi pola lokal (tepi, tekstur, retakan).
-- **Lapisan Pooling** — meringkas & mengecilkan dimensi spasial (max pooling).
-- **Lapisan Terhubung Penuh (MLP)** — menggabungkan fitur menjadi keputusan kelas.
+- **Lapisan Konvolusi (+ReLU)**, mendeteksi pola lokal (tepi, tekstur, retakan).
+- **Lapisan Pooling**, meringkas & mengecilkan dimensi spasial (max pooling).
+- **Lapisan Terhubung Penuh (MLP)**, menggabungkan fitur menjadi keputusan kelas.
 
 LeNet asli memakai *average pooling* + *sigmoid*; di sini dipakai *max pooling* +
 *ReLU* (varian modern) karena lebih stabil dilatih, tanpa mengurangi sifat

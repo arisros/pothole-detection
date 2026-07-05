@@ -1,4 +1,4 @@
-# 06 — Kumpulan Formula (Forward & Backward)
+# 06, Kumpulan Formula (Forward & Backward)
 
 Rangkuman seluruh formula yang diimplementasikan manual. Notasi mengikuti slide
 kuliah *Convolutional Neural Network* (Rinaldi Munir, ITB, 2024).
@@ -75,4 +75,4 @@ F1 = \frac{2\cdot\text{Presisi}\cdot\text{Recall}}{\text{Presisi}+\text{Recall}}
 $$\frac{\partial L}{\partial \theta} \approx \frac{L(\theta+\varepsilon) - L(\theta-\varepsilon)}{2\varepsilon}$$
 
 Galat relatif terhadap gradien analitik < $10^{-5}$ untuk semua lapisan
-(hasil aktual: $10^{-9}$–$10^{-11}$).
+(hasil aktual: $10^{-9}$-$10^{-11}$).

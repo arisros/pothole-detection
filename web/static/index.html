@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deteksi Jalan Berlubang — CNN LeNet-5 dari Nol</title>
-<meta name="description" content="Klasifikasi citra jalan berlubang dengan CNN LeNet-5 yang inti algoritmanya ditulis manual dengan NumPy — tanpa framework deep learning. Demo model langsung, dokumentasi, dan makalah.">
+<title>Deteksi Jalan Berlubang: CNN LeNet-5 dari Nol</title>
+<meta name="description" content="Klasifikasi citra jalan berlubang dengan CNN LeNet-5 yang inti algoritmanya ditulis manual dengan NumPy, tanpa framework deep learning. Demo model langsung, dokumentasi, dan makalah.">
 <meta name="theme-color" content="#f6f1e7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🕳️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -36,14 +36,14 @@
   <section class="hero" style="border-top:none">
     <p class="eyebrow">Pemrosesan Citra · Convolutional Neural Network</p>
     <h1>Mendeteksi jalan berlubang<br class="brk">dengan CNN yang ditulis <span class="mark">dari nol</span>.</h1>
-    <p class="lead">Sebuah model <b>LeNet-5</b> yang seluruh matematikanya — konvolusi, pooling,
-      ReLU, softmax, cross-entropy, hingga <b>backpropagation</b> — dikodekan tangan dengan NumPy.
+    <p class="lead">Sebuah model <b>LeNet-5</b> yang seluruh matematikanya, konvolusi, pooling,
+      ReLU, softmax, cross-entropy, hingga <b>backpropagation</b>, dikodekan tangan dengan NumPy.
       Tanpa PyTorch, tanpa TensorFlow, tanpa autograd. Setiap gradien dibuktikan benar.</p>
     <div class="statline">
       <span><b>94,4%</b> akurasi uji</span><span class="sep">/</span>
       <span><b>712</b> citra</span><span class="sep">/</span>
       <span><b>0</b> framework DL</span><span class="sep">/</span>
-      <span title="selisih ~0,000000001 — praktis nol: bukti perhitungan matematis model benar">galat gradien <b>10⁻⁹</b></span>
+      <span title="selisih ~0,000000001, praktis nol: bukti perhitungan matematis model benar">galat gradien <b>10⁻⁹</b></span>
     </div>
     <p class="scrollcue">↓ &nbsp;coba modelnya di bawah</p>
   </section>
@@ -51,8 +51,8 @@
   <section id="demo">
     <p class="seclabel"><b>01</b> · coba modelnya</p>
     <h2>Beri model sebuah foto jalan.</h2>
-    <p class="sub"><b>Ensembel</b> 3 model LeNet-5 (NumPy murni) — tiga model menebak bersama lalu suaranya
-      dirata-rata, seperti panel juri agar lebih akurat — berjalan langsung di server dan menebak apakah
+    <p class="sub"><b>Ensembel</b> 3 model LeNet-5 (NumPy murni), tiga model menebak bersama lalu suaranya
+      dirata-rata, seperti panel juri agar lebih akurat, berjalan langsung di server dan menebak apakah
       permukaan jalan <b>berlubang</b> atau <b>normal</b>.</p>
     <div class="demo">
       <div class="panel" style="padding:20px; display:flex; flex-direction:column">
@@ -70,15 +70,15 @@
         <div class="verdict idle" id="verdict">Menunggu gambar…</div>
         <div class="conf" id="conf">model memuat bobot terlatih (weights.npz)</div>
         <div class="bar">
-          <div class="row"><span class="nm">normal</span><span class="pct" id="pNormal">—</span></div>
+          <div class="row"><span class="nm">normal</span><span class="pct" id="pNormal">-</span></div>
           <div class="track"><div class="fill normal" id="fNormal"></div></div>
         </div>
         <div class="bar">
-          <div class="row"><span class="nm">pothole · berlubang</span><span class="pct" id="pPothole">—</span></div>
+          <div class="row"><span class="nm">pothole · berlubang</span><span class="pct" id="pPothole">-</span></div>
           <div class="track"><div class="fill pothole" id="fPothole"></div></div>
         </div>
         <p class="disclaim">Dilatih pada dataset terbatas (712 citra, RGB 48×48). Prediksi
-          bersifat ilustratif untuk memperlihatkan cara kerja CNN — bukan untuk penggunaan kritis.</p>
+          bersifat ilustratif untuk memperlihatkan cara kerja CNN, bukan untuk penggunaan kritis.</p>
       </div>
     </div>
   </section>
@@ -96,16 +96,16 @@
     </div>
     <div class="figs">
       <figure><img src="figures/confusion_matrix.png" alt="confusion matrix">
-        <figcaption>Confusion matrix — TP 54, TN 47, FP 5, FN 1.</figcaption></figure>
+        <figcaption>Confusion matrix, TP 54, TN 47, FP 5, FN 1.</figcaption></figure>
       <figure><img src="figures/training_curves.png" alt="kurva pelatihan">
-        <figcaption>Kurva pelatihan — val-acc terbaik 89,7% (epoch 25); overfitting terkendali.</figcaption></figure>
+        <figcaption>Kurva pelatihan, val-acc terbaik 89,7% (epoch 25); overfitting terkendali.</figcaption></figure>
     </div>
   </section>
 
   <section id="arsitektur">
     <p class="seclabel"><b>03</b> · arsitektur</p>
     <h2>Aliran data melewati tiap hidden layer.</h2>
-    <p class="sub">Tiap kali gambar melewati sebuah lapisan, ukurannya menyusut bertahap — dari
+    <p class="sub">Tiap kali gambar melewati sebuah lapisan, ukurannya menyusut bertahap, dari
       48×48 titik jadi 9×9. Rumus (W − N + 2P)/S + 1 hanya menghitung ukuran yang tersisa di
       tiap tahap. Istilah asing? Lihat <a href="viewer.html?doc=07-glosarium">Kamus Istilah</a>.</p>
     <p class="sub" style="margin-top:-6px"><b>Conv</b> = penyaring pola · <b>Pool</b> = memperkecil ·
@@ -124,9 +124,9 @@ flowchart TB
     <p class="caption">↑ setiap kotak = satu lapisan; angka = ukuran data (kanal × tinggi × lebar) yang mengalir</p>
     <div class="figs">
       <figure><img src="figures/feature_maps_pothole.png" alt="feature map pothole">
-        <figcaption>Feature map — citra <b>pothole</b>, dari tepi kasar ke fitur abstrak.</figcaption></figure>
+        <figcaption>Feature map, citra <b>pothole</b>, dari tepi kasar ke fitur abstrak.</figcaption></figure>
       <figure><img src="figures/feature_maps_normal.png" alt="feature map normal">
-        <figcaption>Feature map — citra <b>normal</b>.</figcaption></figure>
+        <figcaption>Feature map, citra <b>normal</b>.</figcaption></figure>
     </div>
   </section>
 
@@ -153,8 +153,8 @@ flowchart TB
 
 <footer>
   <div class="wrap">
-    <p class="ethos">Inti pembelajaran ditulis tangan dengan NumPy — kebenaran <i>backpropagation</i>
-      dibuktikan lewat gradient checking (galat 10⁻⁹–10⁻¹¹), bukan diasumsikan.</p>
+    <p class="ethos">Inti pembelajaran ditulis tangan dengan NumPy, kebenaran <i>backpropagation</i>
+      dibuktikan lewat gradient checking (galat 10⁻⁹-10⁻¹¹), bukan diasumsikan.</p>
     <div class="flinks">
       <a href="https://github.com/arisros/pothole-detection" target="_blank" rel="noopener">GitHub ↗</a>
       <a href="viewer.html?doc=makalah">Makalah</a>
