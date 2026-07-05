@@ -270,8 +270,32 @@ footer .flinks { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0; font
   padding: 2px 6px; border-radius: 5px; }
 .md pre { background: #2a251d; color: #f3ead6; border-radius: 10px; padding: 16px; overflow-x: auto; }
 .md pre code { background: none; color: inherit; padding: 0; font-size: .84em; }
+/* Syntax highlight (highlight.js) — palet editorial di atas latar gelap */
+.md pre code.hljs { color: #f3ead6; background: none; padding: 0; }
+.hljs-comment, .hljs-quote { color: #8f8467; font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-section, .hljs-doctag,
+.hljs-operator { color: #e79457; }
+.hljs-string, .hljs-attr, .hljs-regexp, .hljs-addition { color: #b9c47f; }
+.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: #d9a06c; }
+.hljs-title, .hljs-title.function_, .hljs-name, .hljs-built_in,
+.hljs-builtin-name, .hljs-type { color: #8fb3e0; }
+.hljs-params { color: #f3ead6; }
+.hljs-variable, .hljs-template-variable, .hljs-attribute { color: #e0c98a; }
+.hljs-meta, .hljs-decorator { color: #b79b6f; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
 .md blockquote { margin: 16px 0; padding: 6px 18px; border-left: 3px solid var(--orange);
   background: var(--card); color: var(--ink-soft); border-radius: 0 8px 8px 0; }
+/* Callout "untuk awam" (💡) & "cara baca rumus" (📐) — kotak ramah pemula */
+.md blockquote.callout { border-left-width: 4px; padding: 12px 16px; border-radius: 8px;
+  margin: 18px 0; font-size: .98rem; }
+.md blockquote.callout p { margin: 6px 0; }
+.md blockquote.callout p:first-child { margin-top: 0; }
+.md blockquote.callout p:last-child { margin-bottom: 0; }
+.md blockquote.callout-tip { border-left-color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 7%, var(--card)); }
+.md blockquote.callout-math { border-left-color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 8%, var(--card)); }
 .md .mermaid { background: #fff; border: 1px solid var(--line-2); border-radius: 10px;
   padding: 18px; margin: 22px 0; text-align: center; overflow-x: auto; }
 /* Perbesar diagram: isi lebar wadah (sebelumnya mengecil ke ukuran natural) */
