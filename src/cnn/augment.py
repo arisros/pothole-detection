@@ -1,4 +1,4 @@
-"""Augmentasi daring (on-the-fly) — acak per-batch, per-epoch.
+"""Augmentasi daring (on-the-fly) ,  acak per-batch, per-epoch.
 
 Berbeda dari augmentasi luring (offline) yang menghasilkan sekumpulan varian
 tetap sekali di awal, augmentasi daring mengacak transformasi setiap kali batch

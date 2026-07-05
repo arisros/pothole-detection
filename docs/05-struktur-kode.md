@@ -1,4 +1,4 @@
-# 05 — Struktur Kode (Class Diagram)
+# 05, Struktur Kode (Class Diagram)
 
 Modul inti `src/cnn/` dirancang modular: tiap lapisan adalah objek dengan
 antarmuka `forward`/`backward` yang seragam, sehingga model hanya merangkai

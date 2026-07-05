@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -105,11 +106,16 @@ fetch("content/" + doc + ".md")
       const h = a.getAttribute("href") || "";
       if (h.endsWith(".md")) a.setAttribute("href", "viewer.html?doc=" + h.split("/").pop().replace(/\.md$/, ""));
     });
-    // Tandai blockquote callout awam ("💡") / cara-baca-rumus ("📐") untuk gaya khusus.
+    // Kenali blockquote callout dari teks pembuka, beri kelas gaya + ikon FontAwesome.
     el.querySelectorAll("blockquote").forEach((bq) => {
       const t = (bq.textContent || "").replace(/^\s+/, "");
-      if (t.startsWith("💡")) bq.classList.add("callout", "callout-tip");
-      else if (t.startsWith("📐")) bq.classList.add("callout", "callout-math");
+      let icon = null;
+      if (/^Untuk (pembaca )?awam\b/.test(t)) { bq.classList.add("callout", "callout-tip"); icon = "fa-lightbulb"; }
+      else if (/^Cara membaca rumus\b/.test(t)) { bq.classList.add("callout", "callout-math"); icon = "fa-square-root-variable"; }
+      if (icon) {
+        const p = bq.querySelector("p");
+        if (p) { const i = document.createElement("i"); i.className = "cp-ico fa-solid " + icon; p.insertBefore(i, p.firstChild); }
+      }
     });
     el.querySelectorAll("code.language-mermaid").forEach((c) => {
       const d = document.createElement("div"); d.className = "mermaid"; d.textContent = c.textContent;

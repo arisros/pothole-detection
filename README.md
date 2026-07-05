@@ -1,12 +1,12 @@
 # Deteksi Jalan Berlubang dengan CNN (Implementasi dari Nol)
 
 Klasifikasi citra **jalan berlubang (pothole)** vs **jalan normal** menggunakan
-**Convolutional Neural Network yang inti algoritmanya ditulis manual dengan NumPy** —
+**Convolutional Neural Network yang inti algoritmanya ditulis manual dengan NumPy**, 
 konvolusi, pooling, ReLU, softmax, cross-entropy, dan *backpropagation* diturunkan
 secara matematis lalu dikodekan sendiri **tanpa** framework deep learning (PyTorch/TF/Keras).
 Arsitektur acuan: **LeNet-5**.
 
-> Library pihak ketiga hanya dipakai sebagai *helper* pinggiran — Pillow (I/O citra),
+> Library pihak ketiga hanya dipakai sebagai *helper* pinggiran, Pillow (I/O citra),
 > scikit-learn (split data), matplotlib (plot). Inti pembelajaran 100% NumPy manual.
 
 ## Struktur
@@ -68,5 +68,5 @@ Ukuran tiap *feature map* dihitung dengan rumus `output = (W - N + 2P) / S + 1`.
 
 ## Referensi notasi
 
-R. Munir, *"21 — Convolutional Neural Network"*, IF4073 Pemrosesan Citra Digital,
+R. Munir, *"21, Convolutional Neural Network"*, IF4073 Pemrosesan Citra Digital,
 Teknik Informatika ITB, 2024.
