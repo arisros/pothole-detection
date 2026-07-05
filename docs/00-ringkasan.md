@@ -1,4 +1,4 @@
-# 00 — Ringkasan & Pipeline Penelitian
+# 00, Ringkasan & Pipeline Penelitian
 
 Dokumen ini memberi gambaran umum sistem deteksi jalan berlubang berbasis CNN
 yang inti algoritmanya ditulis manual dengan NumPy.
@@ -39,15 +39,15 @@ flowchart TB
 
 ## Prinsip "tanpa magic"
 
-Seluruh komponen pembelajaran inti — konvolusi, pooling, ReLU, softmax,
-cross-entropy, dan backpropagation — berada di `src/cnn/` dan ditulis manual.
+Seluruh komponen pembelajaran inti, konvolusi, pooling, ReLU, softmax,
+cross-entropy, dan backpropagation, berada di `src/cnn/` dan ditulis manual.
 Kebenarannya dibuktikan dengan **numerical gradient checking** (`src/cnn/gradcheck.py`),
 yang membandingkan gradien analitik dengan gradien numerik (galat < 1e-5).
 
 Library pihak ketiga hanya menjadi *helper* pinggiran:
-- **Pillow** — membaca & me-resize citra,
-- **scikit-learn** — `train_test_split` (pembagian data),
-- **matplotlib** — menggambar kurva & peta fitur.
+- **Pillow**, membaca & me-resize citra,
+- **scikit-learn**, `train_test_split` (pembagian data),
+- **matplotlib**, menggambar kurva & peta fitur.
 
 Lihat dokumen berikut untuk detail aliran data antar hidden layer:
 [01-arsitektur](01-arsitektur.md) · [02-forward-pass](02-forward-pass.md) ·

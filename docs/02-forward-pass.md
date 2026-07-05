@@ -1,4 +1,4 @@
-# 02 — Forward Pass (Aliran Data Maju)
+# 02, Forward Pass (Aliran Data Maju)
 
 Forward pass adalah perjalanan data dari citra masukan hingga peluang kelas.
 Tiap hidden layer menerima keluaran lapisan sebelumnya, mengolahnya, dan
@@ -23,22 +23,22 @@ flowchart TB
 
 ## Operasi tiap lapisan (ringkas)
 
-1. **Konvolusi** — setiap filter digeser ke seluruh citra menghasilkan satu
+1. **Konvolusi**, setiap filter digeser ke seluruh citra menghasilkan satu
    *feature map*:
    $$O[f,i,j] = b_f + \sum_c \sum_m \sum_n X[c,\,iS+m,\,jS+n]\cdot W[f,c,m,n]$$
    Diimplementasikan efisien lewat **im2col** (tiap jendela → satu kolom matriks),
    sehingga konvolusi menjadi satu perkalian matriks `W_col @ X_col`.
 
-2. **ReLU** — `f(u) = max(0, u)`, membuang nilai negatif (non-linearitas).
+2. **ReLU**, `f(u) = max(0, u)`, membuang nilai negatif (non-linearitas).
 
-3. **Max Pooling** — ambil nilai maksimum tiap jendela 2×2, mengecilkan dimensi
+3. **Max Pooling**, ambil nilai maksimum tiap jendela 2×2, mengecilkan dimensi
    spasial setengahnya dan memberi sedikit invariansi terhadap pergeseran.
 
-4. **Flatten** — ubah tensor `(N,16,9,9)` menjadi vektor `(N,1296)`.
+4. **Flatten**, ubah tensor `(N,16,9,9)` menjadi vektor `(N,1296)`.
 
-5. **Fully-Connected** — `y = Wx + b`, menggabungkan seluruh fitur.
+5. **Fully-Connected**, `y = Wx + b`, menggabungkan seluruh fitur.
 
-6. **Softmax** — ubah skor menjadi peluang:
+6. **Softmax**, ubah skor menjadi peluang:
    $$p_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}$$
 
 ## Implementasi (model.py)
@@ -52,4 +52,4 @@ def forward(self, x):
 ```
 
 Tiap lapisan menyimpan *cache* (masukan/indeks argmax) yang diperlukan saat
-backward — lihat [03-backpropagation](03-backpropagation.md).
+backward, lihat [03-backpropagation](03-backpropagation.md).

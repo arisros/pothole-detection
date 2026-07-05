@@ -1,6 +1,6 @@
 # DETEKSI JALAN BERLUBANG MENGGUNAKAN CONVOLUTIONAL NEURAL NETWORK (CNN) YANG DIIMPLEMENTASIKAN DARI NOL DENGAN ARSITEKTUR LeNet-5
 
-**Makalah Penelitian — Pemrosesan Citra Digital & Pembelajaran Mendalam**
+**Makalah Penelitian, Pemrosesan Citra Digital & Pembelajaran Mendalam**
 
 ---
 
@@ -9,15 +9,15 @@
 Jalan berlubang merupakan salah satu penyebab kerusakan kendaraan dan kecelakaan
 lalu lintas. Identifikasi lubang jalan secara manual memerlukan waktu dan biaya
 besar, sehingga diperlukan sistem otomatis berbasis pengolahan citra. Penelitian
-ini membangun sistem klasifikasi citra jalan menjadi dua kelas — **normal** dan
-**berlubang (pothole)** — menggunakan *Convolutional Neural Network* (CNN)
+ini membangun sistem klasifikasi citra jalan menjadi dua kelas, **normal** dan
+**berlubang (pothole):** menggunakan *Convolutional Neural Network* (CNN)
 dengan arsitektur **LeNet-5**. Berbeda dengan kebanyakan penelitian yang
 memakai pustaka siap pakai (TensorFlow/Keras/PyTorch), seluruh **inti algoritma**
-pada penelitian ini — operasi konvolusi, *pooling*, fungsi aktivasi ReLU,
-*softmax*, *cross-entropy*, dan *backpropagation* — **diturunkan secara matematis
+pada penelitian ini, operasi konvolusi, *pooling*, fungsi aktivasi ReLU,
+*softmax*, *cross-entropy*, dan *backpropagation*, **diturunkan secara matematis
 dan diimplementasikan manual menggunakan NumPy** tanpa fasilitas diferensiasi
 otomatis. Kebenaran implementasi turunan (gradien) dibuktikan melalui *numerical
-gradient checking* dengan galat relatif berkisar 10⁻⁹–10⁻¹¹. Dataset terdiri
+gradient checking* dengan galat relatif berkisar 10⁻⁹-10⁻¹¹. Dataset terdiri
 dari 712 citra (348 normal, 364 berlubang) yang diunduh dari repositori publik,
 lalu di-*preprocessing* menjadi citra **RGB 48×48**, dinormalisasi,
 diaugmentasi secara daring, dan dibagi 70/15/15. Model dilatih dengan optimizer
@@ -34,11 +34,11 @@ dataset kecil sehingga akurasi uji mencapai 94,39%.
 **Kata kunci:** deteksi jalan berlubang, convolutional neural network, LeNet-5,
 backpropagation, implementasi dari nol, pengolahan citra digital.
 
-*Abstract — This study builds a road image classifier (normal vs pothole) using a
+*Abstract, This study builds a road image classifier (normal vs pothole) using a
 LeNet-5 Convolutional Neural Network whose core operations (convolution, pooling,
 ReLU, softmax, cross-entropy, backpropagation) are derived and implemented from
 scratch in NumPy, without any deep-learning framework or autograd. Backward
-correctness is verified by numerical gradient checking (relative error 1e-9–1e-11).
+correctness is verified by numerical gradient checking (relative error 1e-9-1e-11).
 On 712 images preprocessed to 48×48 RGB, trained with Adam + cosine LR,
 regularization (L2 weight decay + dropout) and a 3-seed ensemble with test-time
 augmentation, the model attains 94.39% accuracy, 91.53% precision, 98.18% recall,
@@ -48,22 +48,22 @@ and 94.74% F1 on the test set.*
 
 ## DAFTAR ISI
 
-1. BAB I — PENDAHULUAN
-2. BAB II — TINJAUAN PUSTAKA
-3. BAB III — METODOLOGI PENELITIAN
-4. BAB IV — HASIL DAN PEMBAHASAN
-5. BAB V — TEMUAN
-6. BAB VI — KESIMPULAN DAN SARAN
+1. BAB I, PENDAHULUAN
+2. BAB II, TINJAUAN PUSTAKA
+3. BAB III, METODOLOGI PENELITIAN
+4. BAB IV, HASIL DAN PEMBAHASAN
+5. BAB V, TEMUAN
+6. BAB VI, KESIMPULAN DAN SARAN
 7. DAFTAR PUSTAKA
 
 ---
 
-# BAB I — PENDAHULUAN
+# BAB I, PENDAHULUAN
 
 ## 1.1 Latar Belakang
 
 Infrastruktur jalan merupakan tulang punggung mobilitas masyarakat dan
-perekonomian. Namun, kondisi jalan yang rusak — terutama berlubang — masih
+perekonomian. Namun, kondisi jalan yang rusak, terutama berlubang, masih
 menjadi masalah serius di banyak wilayah, termasuk Indonesia. Jalan berlubang
 tidak hanya mempercepat kerusakan komponen kendaraan (ban, suspensi, pelek),
 tetapi juga meningkatkan risiko kecelakaan lalu lintas, khususnya bagi pengendara
@@ -85,7 +85,7 @@ deteksi objek, hingga segmentasi.
 
 Sebagian besar implementasi CNN dewasa ini mengandalkan pustaka tingkat tinggi
 (TensorFlow, Keras, PyTorch) yang menyembunyikan detail matematis di balik
-fungsi siap pakai — sering disebut sebagai "kotak hitam" (*black box*). Bagi
+fungsi siap pakai, sering disebut sebagai "kotak hitam" (*black box*). Bagi
 tujuan pembelajaran, pendekatan ini menyisakan kesenjangan pemahaman: bagaimana
 sebenarnya konvolusi dihitung? Bagaimana gradien mengalir mundur melalui lapisan
 *pooling*? Mengapa *softmax* dan *cross-entropy* selalu dipasangkan? (istilah *softmax* dan *cross-entropy* dijelaskan di BAB II)
@@ -141,7 +141,7 @@ Berdasarkan latar belakang, rumusan masalah penelitian ini adalah:
 
 ---
 
-# BAB II — TINJAUAN PUSTAKA
+# BAB II, TINJAUAN PUSTAKA
 
 ## 2.1 Penelitian Terdahulu (Jurnal Acuan)
 
@@ -164,7 +164,7 @@ ResNet-18, di mana ResNet-18 unggul (akurasi ~92%) dibanding CNN sederhana
 
 **[3] Implementasi Algoritma YOLO untuk Mendeteksi Jalan Berlubang dan Retak**
 (JITSI: Jurnal Ilmiah Teknologi Sistem Informasi). Penelitian ini memakai
-pendekatan deteksi objek (YOLO). Dengan pembagian data latih–validasi 90%–10%,
+pendekatan deteksi objek (YOLO). Dengan pembagian data latih-validasi 90%-10%,
 diperoleh tingkat keyakinan tertinggi 97%, mAP 93,2%, F1-score 88,7%, *recall*
 90,8%, dan presisi 86,7% pada epoch ke-100. Ini menegaskan pendekatan deteksi
 objek cocok untuk melokalisasi posisi lubang, melengkapi pendekatan klasifikasi.
@@ -187,16 +187,16 @@ melintang, retak buaya (*alligator crack*), dan lubang (*pothole*).
 
 | No | Metode | Tugas | Dataset | Metrik utama |
 |----|--------|-------|---------|--------------|
-| [1] | CNN | Klasifikasi | — | Akurasi 97,5% |
+| [1] | CNN | Klasifikasi |, | Akurasi 97,5% |
 | [2] | CNN vs ResNet-18 | Klasifikasi | Citra digital jalan | Akurasi 85% vs 92% |
 | [3] | YOLO | Deteksi objek | Lubang & retak | mAP 93,2%; F1 88,7% |
-| [4] | CNN | Klasifikasi | 22.538 citra | — (dataset besar) |
+| [4] | CNN | Klasifikasi | 22.538 citra |, (dataset besar) |
 | [5] | Benchmark (RDD2022) | Deteksi | Multinasional | Dataset acuan |
 | **Penelitian ini** | **CNN LeNet-5 (manual/dari nol) + ensembel** | **Klasifikasi** | **712 citra** | **Akurasi 94,4%; F1 94,7%** |
 
 Posisi penelitian ini berbeda dari kelima acuan: alih-alih mengejar akurasi
 tertinggi dengan pustaka siap pakai, fokusnya adalah **transparansi dan
-pemahaman** — membuktikan bahwa CNN dapat dibangun dan dilatih dengan benar dari
+pemahaman**, membuktikan bahwa CNN dapat dibangun dan dilatih dengan benar dari
 prinsip dasar.
 
 ## 2.2 Pembelajaran Mendalam (Deep Learning)
@@ -204,7 +204,7 @@ prinsip dasar.
 *Deep learning* adalah cabang *machine learning* di mana model belajar
 melaksanakan tugas klasifikasi langsung dari data (citra, teks, suara). Istilah
 "*deep*" merujuk pada banyaknya lapisan dalam jaringan: jaringan saraf
-tradisional hanya memiliki 2–3 lapisan, sedangkan jaringan dalam dapat memiliki
+tradisional hanya memiliki 2-3 lapisan, sedangkan jaringan dalam dapat memiliki
 puluhan hingga ratusan lapisan. Perbedaan mendasar antara *machine learning*
 klasik dan *deep learning* terletak pada ekstraksi fitur: pada *machine learning*
 fitur dirancang manual, sedangkan *deep learning* menggabungkan ekstraksi fitur
@@ -217,9 +217,9 @@ data bertopologi grid seperti citra. Secara ringkas, **CNN = ANN + konvolusi**.
 Tidak seperti jaringan saraf biasa, neuron pada CNN tersusun dalam tiga dimensi
 (lebar, tinggi, kedalaman). CNN terdiri atas tiga jenis lapisan utama:
 
-1. **Lapisan Konvolusi (+ ReLU)** — ekstraksi fitur lokal.
-2. **Lapisan Pooling** — peringkasan & pengurangan dimensi spasial.
-3. **Lapisan Terhubung Penuh (Fully-Connected/MLP)** — klasifikasi.
+1. **Lapisan Konvolusi (+ ReLU)**, ekstraksi fitur lokal.
+2. **Lapisan Pooling**, peringkasan & pengurangan dimensi spasial.
+3. **Lapisan Terhubung Penuh (Fully-Connected/MLP)**, klasifikasi.
 
 ```mermaid
 flowchart TB
@@ -240,7 +240,7 @@ satu filter *f* dan posisi keluaran (*i*, *j*):
 
 $$O[f,i,j] = b_f + \sum_{c}\sum_{m}\sum_{n} X[c,\,iS+m,\,jS+n]\cdot W[f,c,m,n]$$
 
-> 💡 **Untuk awam:** Bayangkan sebuah "stempel" kecil (W) yang digeser ke seluruh bagian foto. Di tiap posisi, stempel menempel pada sepetak piksel (X), lalu tiap angka dikalikan dan semuanya dijumlahkan (itulah arti tanda Σ, "jumlahkan semua"), ditambah sedikit angka penyesuai (b). Hasilnya (O) adalah satu nilai yang menyatakan seberapa cocok pola di petak itu dengan stempel — misalnya seberapa jelas ada garis tepi lubang.
+> **Untuk awam:** Bayangkan sebuah "stempel" kecil (W) yang digeser ke seluruh bagian foto. Di tiap posisi, stempel menempel pada sepetak piksel (X), lalu tiap angka dikalikan dan semuanya dijumlahkan (itulah arti tanda Σ, "jumlahkan semua"), ditambah sedikit angka penyesuai (b). Hasilnya (O) adalah satu nilai yang menyatakan seberapa cocok pola di petak itu dengan stempel, misalnya seberapa jelas ada garis tepi lubang.
 
 Ukuran *feature map* keluaran dihitung dengan rumus:
 
@@ -250,9 +250,9 @@ dengan W = tinggi/lebar masukan, N = ukuran kernel, P = *padding*, dan S =
 *stride*. Terdapat tiga jenis *padding*: *valid* (tanpa padding), *same* (ukuran
 keluaran sama dengan masukan), dan *full*.
 
-> 💡 **Untuk awam:** Rumus ini cuma menghitung ukuran gambar setelah "stempel" selesai digeser ke seluruh permukaan. Karena stempel tidak bisa keluar dari tepi foto, beberapa baris piksel di pinggir tak terpakai, sehingga gambar hasilnya sedikit lebih kecil dari aslinya. Itu sebabnya di tiap lapisan gambar makin menyusut, mirip foto yang dipangkas pinggirnya berkali-kali.
+> **Untuk awam:** Rumus ini cuma menghitung ukuran gambar setelah "stempel" selesai digeser ke seluruh permukaan. Karena stempel tidak bisa keluar dari tepi foto, beberapa baris piksel di pinggir tak terpakai, sehingga gambar hasilnya sedikit lebih kecil dari aslinya. Itu sebabnya di tiap lapisan gambar makin menyusut, mirip foto yang dipangkas pinggirnya berkali-kali.
 
-Penapis yang berbeda menghasilkan *feature map* yang berbeda — misalnya penapis
+Penapis yang berbeda menghasilkan *feature map* yang berbeda, misalnya penapis
 Sobel mendeteksi tepi, penapis *box blur* memperhalus. Pada CNN, nilai penapis
 **tidak ditentukan manual** melainkan **dipelajari** melalui pelatihan.
 
@@ -263,7 +263,7 @@ positif:
 
 $$f(u) = \max(0, u)$$
 
-> 💡 **Untuk awam:** Ini seperti keran satu arah: kalau angka yang masuk bernilai negatif, keran menutup dan keluarannya jadi 0; kalau positif, angka dibiarkan lewat apa adanya. Aturan sederhana "buang yang negatif, loloskan yang positif" inilah yang membuat jaringan mampu menangkap pola yang rumit.
+> **Untuk awam:** Ini seperti keran satu arah: kalau angka yang masuk bernilai negatif, keran menutup dan keluarannya jadi 0; kalau positif, angka dibiarkan lewat apa adanya. Aturan sederhana "buang yang negatif, loloskan yang positif" inilah yang membuat jaringan mampu menangkap pola yang rumit.
 
 ReLU memberi sifat non-linier yang memungkinkan jaringan memodelkan hubungan
 kompleks, sekaligus mempercepat pelatihan dibanding sigmoid karena tidak
@@ -284,9 +284,9 @@ lapisan terhubung penuh (MLP). Lapisan terakhir menghasilkan vektor berdimensi K
 
 $$\sigma(\vec{z})_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}$$
 
-> 💡 **Untuk awam:** Softmax mengubah skor mentah tiap kelas menjadi persentase keyakinan yang totalnya pas 100%. Mirip penghitungan suara pemilu: tiap kandidat (kelas) mendapat porsi suara, dan semua porsi kalau dijumlahkan pasti 100%. Jadi model bisa berkata, misalnya, "80% yakin berlubang, 20% normal".
+> **Untuk awam:** Softmax mengubah skor mentah tiap kelas menjadi persentase keyakinan yang totalnya pas 100%. Mirip penghitungan suara pemilu: tiap kandidat (kelas) mendapat porsi suara, dan semua porsi kalau dijumlahkan pasti 100%. Jadi model bisa berkata, misalnya, "80% yakin berlubang, 20% normal".
 
-Keluaran *softmax* bernilai 0–1 dan berjumlah satu, sehingga dapat ditafsirkan
+Keluaran *softmax* bernilai 0-1 dan berjumlah satu, sehingga dapat ditafsirkan
 sebagai distribusi peluang antar kelas. Metode pembelajaran yang dipakai adalah
 *supervised learning* dengan mekanisme *backpropagation*.
 
@@ -305,7 +305,7 @@ dapat diperoleh dari turunan loss terhadap keluaran lapisan ke-(*k*+1):
 
 $$\frac{\partial L}{\partial h_k} = \frac{\partial L}{\partial h_{k+1}} \cdot \frac{\partial h_{k+1}}{\partial h_k}$$
 
-> 💡 **Untuk awam:** "Loss" (L) adalah ukuran seberapa besar model salah menebak. Untuk memperbaiki diri, model perlu tahu tiap lapisan menyumbang berapa banyak ke kesalahan itu — inilah gradien (lambang ∂ berarti "seberapa berpengaruh", dan δ adalah kesalahan yang datang dari lapisan sesudahnya). Rumus ini menghitungnya secara mundur, lapis demi lapis dari belakang ke depan, seperti efek domino yang jatuh berantai atau keterlambatan kereta yang merembet ke stasiun-stasiun sebelumnya.
+> **Untuk awam:** "Loss" (L) adalah ukuran seberapa besar model salah menebak. Untuk memperbaiki diri, model perlu tahu tiap lapisan menyumbang berapa banyak ke kesalahan itu, inilah gradien (lambang ∂ berarti "seberapa berpengaruh", dan δ adalah kesalahan yang datang dari lapisan sesudahnya). Rumus ini menghitungnya secara mundur, lapis demi lapis dari belakang ke depan, seperti efek domino yang jatuh berantai atau keterlambatan kereta yang merembet ke stasiun-stasiun sebelumnya.
 
 Inilah inti efisiensi *backpropagation*: alih-alih menghitung ulang turunan dari
 awal untuk tiap parameter, gradien "diwariskan" mundur lapis demi lapis. Setiap
@@ -324,10 +324,10 @@ metode `forward(x)` dan `backward(δ)` yang seragam.
 Kinerja klasifikasi biner diukur dengan *confusion matrix* yang mencatat empat
 kemungkinan hasil prediksi (kelas positif = pothole):
 
-- **TP** (*true positive*): berlubang, diprediksi berlubang — benar.
-- **TN** (*true negative*): normal, diprediksi normal — benar.
-- **FP** (*false positive*): normal, diprediksi berlubang — salah (alarm palsu).
-- **FN** (*false negative*): berlubang, diprediksi normal — salah (lubang terlewat).
+- **TP** (*true positive*): berlubang, diprediksi berlubang, benar.
+- **TN** (*true negative*): normal, diprediksi normal, benar.
+- **FP** (*false positive*): normal, diprediksi berlubang, salah (alarm palsu).
+- **FN** (*false negative*): berlubang, diprediksi normal, salah (lubang terlewat).
 
 Dari keempatnya diturunkan empat metrik:
 
@@ -372,7 +372,7 @@ seluruh aliran dimensi dan gradien dapat ditelusuri dengan mudah.
 
 ---
 
-# BAB III — METODOLOGI PENELITIAN
+# BAB III, METODOLOGI PENELITIAN
 
 ## 3.1 Alur Penelitian
 
@@ -407,7 +407,7 @@ menyimpan citra jalan dalam dua folder kelas: *Pothole* (berlubang) dan *Plain*
 
 Total **712 citra** berhasil diunduh dan diverifikasi (tidak korup). Catatan:
 dataset ini bersifat umum (bukan khusus Indonesia). Pipeline dirancang agar mudah
-diganti sumbernya — untuk data khusus Indonesia (misalnya Roboflow *Road Damage
+diganti sumbernya, untuk data khusus Indonesia (misalnya Roboflow *Road Damage
 Indonesia* atau subset RDD2022 Indonesia) cukup meletakkan citra pada kedua
 folder kelas tersebut, lalu menjalankan kembali pipeline.
 
@@ -441,7 +441,7 @@ varian grayscale 32px. Implementasi tetap menyediakan opsi grayscale via rumus
 luminansi BT.601 ($Y = 0{,}299R + 0{,}587G + 0{,}114B$), namun konfigurasi final
 memakai RGB.
 
-**2. Resize.** Setiap citra di-*resize* menjadi **48×48** piksel — resolusi lebih
+**2. Resize.** Setiap citra di-*resize* menjadi **48×48** piksel, resolusi lebih
 tinggi dari 32×32 agar detail tekstur lubang lebih terjaga, dengan tetap menjaga
 biaya komputasi murni-NumPy dalam batas wajar.
 
@@ -450,7 +450,7 @@ distandardisasi:
 
 $$x' = \frac{x - \mu}{\sigma}$$
 
-> 💡 **Untuk awam:** Rumus ini menyetel semua foto ke "standar" yang sama sebelum dipelajari. μ adalah tingkat terang rata-rata semua foto, dan σ adalah seberapa lebar variasi terang-gelapnya. Dengan mengurangi rata-rata lalu membaginya, setiap foto seolah dipotret pada pencahayaan yang seragam, sehingga model tidak tertipu hanya karena satu foto kebetulan lebih terang atau lebih gelap.
+> **Untuk awam:** Rumus ini menyetel semua foto ke "standar" yang sama sebelum dipelajari. μ adalah tingkat terang rata-rata semua foto, dan σ adalah seberapa lebar variasi terang-gelapnya. Dengan mengurangi rata-rata lalu membaginya, setiap foto seolah dipotret pada pencahayaan yang seragam, sehingga model tidak tertipu hanya karena satu foto kebetulan lebih terang atau lebih gelap.
 
 dengan μ dan σ (satu skalar global, dipakai bersama untuk ketiga kanal) dihitung
 dari data latih. Diperoleh **μ = 0,4728** dan **σ = 0,2172**. Standardisasi
@@ -512,15 +512,15 @@ Perhitungan dimensi memakai rumus (W − N + 2P)/S + 1, dirangkum pada Tabel 3.3
 
 | Tahap | Operasi | Rumus | Keluaran |
 |-------|---------|-------|----------|
-| Input | — | — | 3 × 48 × 48 |
+| Input |, |, | 3 × 48 × 48 |
 | Conv1 | 6×(5×5), P=0, S=1 | (48−5)/1+1 = 44 | 6 × 44 × 44 |
 | Pool1 | max 2×2, S=2 | (44−2)/2+1 = 22 | 6 × 22 × 22 |
 | Conv2 | 16×(5×5), P=0, S=1 | (22−5)/1+1 = 18 | 16 × 18 × 18 |
 | Pool2 | max 2×2, S=2 | (18−2)/2+1 = 9 | 16 × 9 × 9 |
-| Flatten | 16·9·9 | — | 1296 |
-| FC1 | 1296 → 120 | — | 120 |
-| FC2 | 120 → 84 | — | 84 |
-| FC3 | 84 → 2 | — | 2 |
+| Flatten | 16·9·9 |, | 1296 |
+| FC1 | 1296 → 120 |, | 120 |
+| FC2 | 120 → 84 |, | 84 |
+| FC3 | 84 → 2 |, | 2 |
 
 ## 3.6 Penurunan Formula (Forward dan Backward)
 
@@ -528,11 +528,11 @@ Bagian inti penelitian: setiap operasi diturunkan secara matematis lalu dikodeka
 manual. *Forward* menghitung keluaran; *backward* menghitung gradien loss
 terhadap masukan dan parameter memakai aturan rantai.
 
-> 📐 **Cara membaca rumus di bab ini:** tidak perlu latar matematika untuk
-> mengikuti — cukup terjemahkan simbolnya. **∂L/∂W** dibaca "seberapa besar
+> **Cara membaca rumus di bab ini:** tidak perlu latar matematika untuk
+> mengikuti, cukup terjemahkan simbolnya. **∂L/∂W** dibaca "seberapa besar
 > kesalahan (L) berubah bila bobot W digeser sedikit", yaitu arah untuk memperbaiki
 > W. **Σ** berarti "jumlahkan semua angka dalam daftar". **ᵀ** berarti "tukar baris
-> jadi kolom" (tabel diputar). **δ** dan **∇** keduanya adalah gradien — sinyal
+> jadi kolom" (tabel diputar). **δ** dan **∇** keduanya adalah gradien, sinyal
 > koreksi yang mengalir mundur dari hasil ke tiap bagian model. **𝒩** berarti angka
 > acak yang diambil dari sebaran berbentuk lonceng (banyak di tengah, jarang di tepi).
 > Rincian tiap istilah ada di KAMUS ISTILAH (LAMPIRAN B).
@@ -548,7 +548,7 @@ $$\frac{\partial L}{\partial W} = \delta_{\text{col}} \cdot X_{\text{col}}^{\top
 \frac{\partial L}{\partial b_f} = \sum_{i,j}\delta[f,i,j],\quad
 \frac{\partial L}{\partial X} = \text{col2im}(W_{\text{col}}^{\top}\,\delta_{\text{col}})$$
 
-> 💡 **Untuk awam:** Setelah tahu model salah, tiap angka di dalam "stempel" (bobot W) diberi tahu seberapa besar ia ikut menyebabkan kesalahan tadi, lalu digeser sedikit ke arah yang benar. Yang paling berkontribusi pada kesalahan dikoreksi paling banyak, yang tak bersalah nyaris tak diubah. Ini seperti evaluasi tim: tiap anggota diberi masukan sesuai porsi kesalahannya, lalu memperbaiki diri.
+> **Untuk awam:** Setelah tahu model salah, tiap angka di dalam "stempel" (bobot W) diberi tahu seberapa besar ia ikut menyebabkan kesalahan tadi, lalu digeser sedikit ke arah yang benar. Yang paling berkontribusi pada kesalahan dikoreksi paling banyak, yang tak bersalah nyaris tak diubah. Ini seperti evaluasi tim: tiap anggota diberi masukan sesuai porsi kesalahannya, lalu memperbaiki diri.
 
 Fungsi `col2im` mengakumulasikan kontribusi gradien tiap piksel yang muncul di
 banyak jendela.
@@ -557,7 +557,7 @@ banyak jendela.
 
 $$f(u)=\max(0,u), \qquad \frac{\partial L}{\partial u} = \delta\cdot\mathbb{1}[u>0]$$
 
-> 💡 **Untuk awam:** Simbol 𝟙[u>0] adalah sebuah saklar: bernilai 1 kalau tadi keran ReLU terbuka (angkanya positif), dan 0 kalau tertutup. Artinya hanya bagian gambar yang tadi "menyala" saat langkah maju yang ikut dikoreksi saat belajar; bagian yang tadi mati diabaikan. Umpan balik hanya dikirim ke jalur yang memang aktif.
+> **Untuk awam:** Simbol 𝟙[u>0] adalah sebuah saklar: bernilai 1 kalau tadi keran ReLU terbuka (angkanya positif), dan 0 kalau tertutup. Artinya hanya bagian gambar yang tadi "menyala" saat langkah maju yang ikut dikoreksi saat belajar; bagian yang tadi mati diabaikan. Umpan balik hanya dikirim ke jalur yang memang aktif.
 
 ### 3.6.3 Max Pooling
 
@@ -572,7 +572,7 @@ $$y = xW + b,\qquad
 \frac{\partial L}{\partial b} = \sum\delta,\quad
 \frac{\partial L}{\partial x} = \delta W^{\top}$$
 
-> 💡 **Untuk awam:** Baris pertama (y = xW + b) menggabungkan semua ciri (x) dengan bobot kepentingannya (W) lalu menjumlahkannya — mirip menghitung nilai akhir dari banyak mata pelajaran yang punya bobot berbeda-beda. Tiga rumus di bawahnya hanyalah petunjuk arah perbaikan: seberapa harus mengubah bobot W, angka tambahan b, dan seberapa besar kesalahan diteruskan mundur ke x.
+> **Untuk awam:** Baris pertama (y = xW + b) menggabungkan semua ciri (x) dengan bobot kepentingannya (W) lalu menjumlahkannya, mirip menghitung nilai akhir dari banyak mata pelajaran yang punya bobot berbeda-beda. Tiga rumus di bawahnya hanyalah petunjuk arah perbaikan: seberapa harus mengubah bobot W, angka tambahan b, dan seberapa besar kesalahan diteruskan mundur ke x.
 
 ### 3.6.5 Softmax + Cross-Entropy
 
@@ -588,7 +588,7 @@ $$\frac{\partial L}{\partial z_i} = p_i - y_i$$
 Inilah alasan keduanya selalu dipasangkan. Vektor (p − y) menjadi titik awal
 aliran gradien mundur.
 
-> 💡 **Untuk awam:** Cross-entropy mengukur "seberapa kaget" model terhadap jawaban yang benar — makin pede tapi ternyata salah, makin besar hukumannya. Hebatnya, hasil akhirnya sangat sederhana: (p − y), yaitu selisih antara tebakan model (p) dan jawaban sebenarnya (y). Kalau tebakan sudah tepat, selisihnya nol dan tak ada yang perlu diperbaiki.
+> **Untuk awam:** Cross-entropy mengukur "seberapa kaget" model terhadap jawaban yang benar, makin pede tapi ternyata salah, makin besar hukumannya. Hebatnya, hasil akhirnya sangat sederhana: (p − y), yaitu selisih antara tebakan model (p) dan jawaban sebenarnya (y). Kalau tebakan sudah tepat, selisihnya nol dan tak ada yang perlu diperbaiki.
 
 ### 3.6.6 Inisialisasi Bobot
 
@@ -597,7 +597,7 @@ $$\text{He (ReLU)}:\; W\sim\mathcal{N}\!\Big(0,\tfrac{2}{n_{in}}\Big), \qquad
 
 Inisialisasi He dipakai pada lapisan ber-ReLU, Xavier pada lapisan keluaran.
 
-> 💡 **Untuk awam:** Sebelum mulai belajar, bobot diisi angka-angka acak yang diambil dari sebaran berbentuk lonceng (kebanyakan dekat nol, sedikit yang jauh). Tujuannya menyetel "volume awal" yang pas: kalau terlalu keras jaringan bisa meledak, kalau terlalu pelan tak ada sinyal yang terdengar. He dan Xavier hanyalah dua resep untuk menentukan lebar sebaran acak itu agar cocok dengan jenis lapisannya.
+> **Untuk awam:** Sebelum mulai belajar, bobot diisi angka-angka acak yang diambil dari sebaran berbentuk lonceng (kebanyakan dekat nol, sedikit yang jauh). Tujuannya menyetel "volume awal" yang pas: kalau terlalu keras jaringan bisa meledak, kalau terlalu pelan tak ada sinyal yang terdengar. He dan Xavier hanyalah dua resep untuk menentukan lebar sebaran acak itu agar cocok dengan jenis lapisannya.
 
 ### 3.6.7 Aliran Gradien Mundur
 
@@ -621,7 +621,7 @@ $$m \leftarrow \beta_1 m + (1-\beta_1)\nabla,\quad
 v \leftarrow \beta_2 v + (1-\beta_2)\nabla^2,\quad
 \theta \leftarrow \theta - \eta\,\frac{\hat m}{\sqrt{\hat v}+\varepsilon}$$
 
-> 💡 **Untuk awam:** ∇ menunjuk arah menuruni "bukit kesalahan" menuju titik terbaik. Adam tidak asal melangkah: ia mengingat rata-rata arah langkah-langkah sebelumnya (m) dan seberapa besar goyangannya (v), lalu memakai keduanya agar langkahnya mantap dan tidak terpeleset ke kiri-kanan. Mirip pesepeda menuruni bukit yang menjaga keseimbangan berdasarkan gerak beberapa saat terakhir, bukan menyentak tiap detik.
+> **Untuk awam:** ∇ menunjuk arah menuruni "bukit kesalahan" menuju titik terbaik. Adam tidak asal melangkah: ia mengingat rata-rata arah langkah-langkah sebelumnya (m) dan seberapa besar goyangannya (v), lalu memakai keduanya agar langkahnya mantap dan tidak terpeleset ke kiri-kanan. Mirip pesepeda menuruni bukit yang menjaga keseimbangan berdasarkan gerak beberapa saat terakhir, bukan menyentak tiap detik.
 
 Laju pembelajaran meluruh mengikuti **jadwal cosine** sepanjang pelatihan, dan
 regularisasi **L2 weight decay** (hanya pada bobot W, bukan bias) ditambahkan pada
@@ -674,8 +674,8 @@ Untuk menstabilkan prediksi, prosedur pelatihan di atas diulang untuk **tiga
 *seed* berbeda** (42, 7, 123), menghasilkan tiga model yang belajar dari
 inisialisasi dan urutan *mini-batch* yang berlainan. Saat pengujian, peluang
 *softmax* ketiga model **dirata-ratakan** (*soft-voting* ensembel). Selain itu
-diterapkan **test-time augmentation (TTA)**: tiap citra uji diprediksi dua kali —
-versi asli dan versi *flip* horizontal — lalu peluangnya dirata-ratakan. Kedua
+diterapkan **test-time augmentation (TTA)**: tiap citra uji diprediksi dua kali, 
+versi asli dan versi *flip* horizontal, lalu peluangnya dirata-ratakan. Kedua
 teknik ini menekan varians prediksi; ensembel + TTA menghasilkan akurasi uji
 94,39% (satu model tunggal ≈92,5%).
 
@@ -704,12 +704,12 @@ Teknik **im2col** yang menjadi tulang punggung efisiensi konvolusi mengubah
 operasi empat-perulangan-bersarang menjadi satu perkalian matriks. Idenya: tiap
 jendela konvolusi diratakan menjadi satu kolom, lalu seluruh kolom disusun menjadi
 matriks `X_col`; konvolusi menjadi `W_col @ X_col`. Pada *backward*, fungsi
-`col2im` melakukan kebalikannya — menebarkan kembali gradien kolom ke posisi
+`col2im` melakukan kebalikannya, menebarkan kembali gradien kolom ke posisi
 piksel asal sambil menjumlahkan kontribusi piksel yang dipakai banyak jendela.
 
 ---
 
-# BAB IV — HASIL DAN PEMBAHASAN
+# BAB IV, HASIL DAN PEMBAHASAN
 
 ## 4.1 Verifikasi Kebenaran Backpropagation
 
@@ -723,27 +723,27 @@ $$\frac{\partial L}{\partial\theta} \approx
 Galat relatif < 10⁻⁵ menandakan implementasi benar. Hasil aktual jauh lebih kecil
 (Tabel 4.1), membuktikan seluruh *backward* diturunkan dengan benar.
 
-> 💡 **Untuk awam:** "Galat relatif" di sini adalah selisih antara hitungan rumus yang kami tulis sendiri dengan hitungan pembanding yang dijamin benar. Angka sekecil `1e-9` (0,000000001) berarti kedua hasil praktis identik — seperti dua timbangan yang selisihnya kurang dari sehelai rambut. Ini menjadi bukti bahwa kode matematis yang kami tulis manual sudah benar.
+> **Untuk awam:** "Galat relatif" di sini adalah selisih antara hitungan rumus yang kami tulis sendiri dengan hitungan pembanding yang dijamin benar. Angka sekecil `1e-9` (0,000000001) berarti kedua hasil praktis identik, seperti dua timbangan yang selisihnya kurang dari sehelai rambut. Ini menjadi bukti bahwa kode matematis yang kami tulis manual sudah benar.
 
 **Tabel 4.1. Hasil gradient checking**
 
 | Komponen | Galat relatif | Status |
 |----------|---------------|--------|
-| Conv2D — dx | 4,61 × 10⁻⁹ | LULUS |
-| Conv2D — dW | 2,33 × 10⁻⁹ | LULUS |
-| Conv2D — db | 1,30 × 10⁻¹⁰ | LULUS |
-| MaxPool2D — dx | 3,36 × 10⁻¹¹ | LULUS |
-| ReLU — dx | 3,05 × 10⁻¹¹ | LULUS |
-| Dense — dx | 6,95 × 10⁻¹⁰ | LULUS |
-| Dense — dW | 9,29 × 10⁻¹¹ | LULUS |
-| Dense — db | 9,49 × 10⁻¹¹ | LULUS |
-| Softmax+CE — dscores | 1,28 × 10⁻¹⁰ | LULUS |
+| Conv2D, dx | 4,61 × 10⁻⁹ | LULUS |
+| Conv2D, dW | 2,33 × 10⁻⁹ | LULUS |
+| Conv2D, db | 1,30 × 10⁻¹⁰ | LULUS |
+| MaxPool2D, dx | 3,36 × 10⁻¹¹ | LULUS |
+| ReLU, dx | 3,05 × 10⁻¹¹ | LULUS |
+| Dense, dx | 6,95 × 10⁻¹⁰ | LULUS |
+| Dense, dW | 9,29 × 10⁻¹¹ | LULUS |
+| Dense, db | 9,49 × 10⁻¹¹ | LULUS |
+| Softmax+CE, dscores | 1,28 × 10⁻¹⁰ | LULUS |
 
 ## 4.2 Sanity Check (Overfit Subset Kecil)
 
 Sebagai uji kewarasan, model dilatih pada 32 sampel saja selama 40 epoch. Model
 mencapai **akurasi latih 100%** dengan loss mendekati nol. Ini membuktikan model
-dan *backpropagation* memang mampu belajar — sebuah prasyarat penting sebelum
+dan *backpropagation* memang mampu belajar, sebuah prasyarat penting sebelum
 pelatihan penuh.
 
 ## 4.3 Proses Pelatihan
@@ -791,7 +791,7 @@ dilihat. Hasil metrik dirangkum pada Tabel 4.3.
 | Recall | **98,18%** |
 | F1-score | **94,74%** |
 
-> 💡 **Untuk awam:** Arti tiap angka di atas: **Akurasi** = dari semua foto, berapa persen yang ditebak benar. **Presisi** = dari semua foto yang model bilang "berlubang", berapa yang benar-benar berlubang (mengukur seberapa jarang model salah alarm). **Recall** = dari semua lubang yang sebenarnya ada, berapa yang berhasil ditemukan model (mengukur seberapa jarang lubang terlewat). **F1-score** = angka penyeimbang antara presisi dan recall; makin dekat ke 100%, makin baik keseluruhannya.
+> **Untuk awam:** Arti tiap angka di atas: **Akurasi** = dari semua foto, berapa persen yang ditebak benar. **Presisi** = dari semua foto yang model bilang "berlubang", berapa yang benar-benar berlubang (mengukur seberapa jarang model salah alarm). **Recall** = dari semua lubang yang sebenarnya ada, berapa yang berhasil ditemukan model (mengukur seberapa jarang lubang terlewat). **F1-score** = angka penyeimbang antara presisi dan recall; makin dekat ke 100%, makin baik keseluruhannya.
 
 *Confusion matrix* pengujian ditunjukkan pada Tabel 4.4 dan Gambar 4.2.
 
@@ -825,7 +825,7 @@ Untuk memahami cara kerja model, keluaran tiap lapisan tersembunyi divisualkan
 sebagai *feature map* (Gambar 4.4 dan 4.5). Terlihat bahwa lapisan awal
 (Conv1) menangkap fitur kasar seperti tepi dan tekstur permukaan jalan, sedangkan
 lapisan lebih dalam (Conv2, Pool2) menghasilkan aktivasi yang lebih jarang dan
-abstrak — merepresentasikan pola tingkat tinggi yang relevan untuk membedakan
+abstrak, merepresentasikan pola tingkat tinggi yang relevan untuk membedakan
 lubang dari permukaan normal.
 
 ![Gambar 4.4 Feature map kelas pothole](../experiments/figures/feature_maps_pothole.png)
@@ -844,7 +844,7 @@ tanpa pustaka *deep learning*. Capaian ini ditopang oleh beberapa keputusan
 desain yang saling melengkapi:
 
 1. **Kanal RGB + resolusi 48×48.** Mempertahankan informasi warna serta detail
-   tekstur/bayangan lubang — kontributor terbesar terhadap akurasi satu model.
+   tekstur/bayangan lubang, kontributor terbesar terhadap akurasi satu model.
 2. **Regularisasi (weight decay + dropout).** Menekan *overfitting* sehingga
    generalisasi terjaga meski dataset kecil (712 citra).
 3. **Augmentasi daring + optimizer Adam berjadwal cosine.** Ragam data per-epoch
@@ -862,24 +862,24 @@ ensembel.
 
 ---
 
-# BAB V — TEMUAN
+# BAB V, TEMUAN
 
 Beberapa temuan utama dari penelitian ini:
 
 1. **Implementasi manual terbukti benar.** Seluruh operasi *backward* lulus
-   *numerical gradient checking* dengan galat 10⁻⁹–10⁻¹¹, jauh di bawah ambang
+   *numerical gradient checking* dengan galat 10⁻⁹-10⁻¹¹, jauh di bawah ambang
    10⁻⁵. Ini membuktikan penurunan matematis dan kode yang ditulis sahih tanpa
    bantuan diferensiasi otomatis.
 
 2. **Penggabungan softmax + cross-entropy sangat menyederhanakan gradien.**
    Gradien gabungan (p − y) jauh lebih sederhana dan stabil dibanding menurunkan
-   keduanya terpisah — sebuah pelajaran penting tentang mengapa keduanya selalu
+   keduanya terpisah, sebuah pelajaran penting tentang mengapa keduanya selalu
    dipasangkan.
 
 3. **Regularisasi + ensembel menekan overfitting secara efektif.** Kombinasi
    *weight decay*, *dropout*, augmentasi daring, dan ensembel 3 *seed* + TTA
    menjaga akurasi validasi ~90% dan akurasi uji **94,39%** dengan loss validasi
-   stabil — menunjukkan *overfitting* pada dataset kecil dapat ditekan tanpa
+   stabil, menunjukkan *overfitting* pada dataset kecil dapat ditekan tanpa
    menambah data, asalkan regularisasi dan variansi model dikelola dengan baik.
 
 4. **Kanal RGB + resolusi 48×48 adalah pengungkit terbesar.** Informasi warna
@@ -887,28 +887,28 @@ Beberapa temuan utama dari penelitian ini:
    permukaan normal, dan merupakan kontributor akurasi satu-model terbesar.
 
 5. **Visualisasi feature map mengkonfirmasi cara kerja CNN.** Lapisan awal
-   menangkap tepi/tekstur, lapisan dalam menangkap pola abstrak — sesuai teori,
+   menangkap tepi/tekstur, lapisan dalam menangkap pola abstrak, sesuai teori,
    sekaligus memvisualkan "pergerakan" representasi antar hidden layer.
 
 6. **Ensembel + TTA menekan varians tanpa mengubah arsitektur.** Merata-ratakan
    *softmax* tiga model *seed* berbeda dan memadukan prediksi asli+flip (TTA)
-   menekan varians prediksi (akurasi uji 94,39% vs ≈92,5% satu model) — teknik
+   menekan varians prediksi (akurasi uji 94,39% vs ≈92,5% satu model), teknik
    murah yang efektif pada implementasi murni NumPy tanpa GPU.
 
 ---
 
-# BAB VI — KESIMPULAN DAN SARAN
+# BAB VI, KESIMPULAN DAN SARAN
 
 ## 6.1 Kesimpulan
 
-1. Seluruh komponen inti CNN — konvolusi, *pooling*, ReLU, *softmax*,
-   *cross-entropy*, dan *backpropagation* — berhasil diturunkan dan
+1. Seluruh komponen inti CNN, konvolusi, *pooling*, ReLU, *softmax*,
+   *cross-entropy*, dan *backpropagation*, berhasil diturunkan dan
    diimplementasikan **manual dengan NumPy** tanpa pustaka *deep learning*.
 2. Kebenaran implementasi *backpropagation* **terbukti** melalui *numerical
-   gradient checking* (galat 10⁻⁹–10⁻¹¹) dan uji *overfit* subset kecil (akurasi
+   gradient checking* (galat 10⁻⁹-10⁻¹¹) dan uji *overfit* subset kecil (akurasi
    100%).
-3. Model LeNet-5 hasil implementasi manual — dengan kanal RGB 48×48, regularisasi
-   (*weight decay* + *dropout*), dan **ensembel 3 model + TTA** — mengklasifikasikan
+3. Model LeNet-5 hasil implementasi manual, dengan kanal RGB 48×48, regularisasi
+   (*weight decay* + *dropout*), dan **ensembel 3 model + TTA**, mengklasifikasikan
    citra jalan berlubang dengan **akurasi 94,39%, presisi 91,53%, recall 98,18%,
    dan F1-score 94,74%** pada data uji, setara dengan penelitian acuan yang
    memakai pustaka siap pakai.
@@ -921,7 +921,7 @@ pengembangan berikutnya:
 
 1. **Perbesar dan ragamkan dataset**, idealnya memakai data jalan Indonesia
    (mis. RDD2022 Indonesia atau Roboflow *Road Damage Indonesia*), untuk
-   meningkatkan generalisasi lebih jauh — faktor pembatas utama yang tersisa.
+   meningkatkan generalisasi lebih jauh, faktor pembatas utama yang tersisa.
 2. **Naikkan resolusi lebih tinggi lagi** (mis. 64×64 atau lebih) selama biaya
    komputasi murni-NumPy masih wajar, untuk mempertahankan detail lubang halus.
 3. **Perdalam arsitektur** (tambah lapisan konvolusi, *batch normalization*) atau
@@ -933,14 +933,14 @@ pengembangan berikutnya:
 
 ---
 
-# LAMPIRAN A — BEDAH KODE: DARI RUMUS KE IMPLEMENTASI
+# LAMPIRAN A, BEDAH KODE: DARI RUMUS KE IMPLEMENTASI
 
 Bab ini membedah kode inti (murni NumPy) baris demi baris, dipasangkan dengan
 diagram alurnya. Di layar lebar, **kode dan diagram tampil berdampingan**; di
 layar sempit keduanya menjadi **tab** (Kode / Diagram). Semua potongan diambil
 apa adanya dari repositori (`src/cnn/`).
 
-> 💡 **Untuk pembaca awam:** sebelum masuk ke potongan kode, bayangkan beberapa
+> **Untuk pembaca awam:** sebelum masuk ke potongan kode, bayangkan beberapa
 > hal ini. Pertama, **tensor `(N, C, H, W)`** hanyalah tumpukan angka yang rapi:
 > `N` = berapa banyak gambar dalam satu tumpukan, `C` = jumlah kanal warna tiap
 > gambar (3 untuk merah-hijau-biru, 1 untuk hitam-putih), `H` = tinggi gambar
@@ -948,35 +948,35 @@ apa adanya dari repositori (`src/cnn/`).
 > 32 foto berwarna berukuran 48×48 titik yang ditumpuk jadi satu.
 >
 > Kedua, model bekerja dua arah. **Forward (jalan maju)** adalah saat gambar
-> mengalir dari awal ke akhir jaringan sampai keluar sebuah tebakan — "berlubang"
+> mengalir dari awal ke akhir jaringan sampai keluar sebuah tebakan, "berlubang"
 > atau "normal", persis seperti murid mengerjakan soal dari atas ke bawah lalu
 > menuliskan jawaban. **Backward (jalan mundur)** adalah saat kita membandingkan
 > tebakan itu dengan jawaban benar, lalu menelusuri balik untuk menghitung bagian
-> mana yang paling keliru — seperti mencocokkan jawaban dengan kunci lalu menandai
+> mana yang paling keliru, seperti mencocokkan jawaban dengan kunci lalu menandai
 > di langkah mana kesalahan bermula.
 >
 > Ketiga, hasil dari jalan mundur itu disebut **gradien**: sebuah penunjuk yang
 > memberi tahu ke arah mana dan seberapa besar tiap angka di dalam model harus
-> digeser agar tebakan berikutnya lebih tepat — ibarat kompas perbaikan.
+> digeser agar tebakan berikutnya lebih tepat, ibarat kompas perbaikan.
 >
 > Keempat, perhatikan satu pola yang berulang di hampir semua kode ini: **jalan
 > maju menyimpan catatan (disebut *cache*) → jalan mundur memakai catatan itu.**
 > Saat forward, model menyimpan angka-angka antara yang sempat dihitung; saat
 > backward, angka simpanan itu dipakai ulang supaya koreksi bisa dihitung tanpa
-> mengulang pekerjaan dari nol — seperti menyimpan coretan langkah pengerjaan soal
+> mengulang pekerjaan dari nol, seperti menyimpan coretan langkah pengerjaan soal
 > agar mudah menelusuri di mana salahnya. Istilah-istilah lain yang muncul di sini
 > dijelaskan satu per satu di **KAMUS ISTILAH (LAMPIRAN B)**.
 
-## A.1 Konvolusi via im2col — `Conv2D.forward`
+## A.1 Konvolusi via im2col, `Conv2D.forward`
 
 Konvolusi naif berupa empat perulangan bersarang (filter × kanal × baris × kolom)
 sangat lambat di Python. Trik **im2col** mengubah tiap jendela konvolusi menjadi
 satu kolom matriks, sehingga seluruh konvolusi menjadi **satu perkalian matriks**
 `w_col @ x_col`. Berikut jalur majunya:
 
-> 💡 **Untuk awam:** Bayangkan sebuah stempel kecil yang digeser menyapu seluruh permukaan foto, satu petak demi satu petak. Alih-alih menghitung tiap petak satu per satu (lambat), trik im2col menyalin isi tiap petak menjadi satu baris pada sebuah daftar besar, lalu seluruh perhitungan dilakukan sekali secara massal seperti mengalikan satu tabel raksasa. Hasilnya sama, tetapi jauh lebih cepat.
+> **Untuk awam:** Bayangkan sebuah stempel kecil yang digeser menyapu seluruh permukaan foto, satu petak demi satu petak. Alih-alih menghitung tiap petak satu per satu (lambat), trik im2col menyalin isi tiap petak menjadi satu baris pada sebuah daftar besar, lalu seluruh perhitungan dilakukan sekali secara massal seperti mengalikan satu tabel raksasa. Hasilnya sama, tetapi jauh lebih cepat.
 
-:::pair Gambar A.1 — Forward konvolusi (`src/cnn/layers.py`)
+:::pair Gambar A.1, Forward konvolusi (`src/cnn/layers.py`)
 ```python
 def forward(self, x):
     n, c, h, w = x.shape
@@ -1008,31 +1008,31 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`n, c, h, w = x.shape`** — bongkar dimensi masukan: `n` batch, `c` kanal (3 untuk
+- **`n, c, h, w = x.shape`**, bongkar dimensi masukan: `n` batch, `c` kanal (3 untuk
   RGB), `h`/`w` tinggi/lebar. Konvensi tensor di seluruh kode adalah `(N, C, H, W)`.
-- **`out_h`, `out_w`** — ukuran feature map keluaran, dihitung oleh helper
+- **`out_h`, `out_w`**, ukuran feature map keluaran, dihitung oleh helper
   `conv_output_size(in, kernel, stride, pad)` yang menerapkan rumus slide ITB
   `(W − N + 2P)/S + 1`. Untuk masukan 48 dengan kernel 5, pad 0, stride 1 → 44.
-- **`x_col = im2col(...)`** — inti trik: menyusun **setiap** jendela konvolusi
-  menjadi kolom. Hasilnya matriks `(C·KH·KW, N·oh·ow)` — tiap kolom satu jendela
+- **`x_col = im2col(...)`**, inti trik: menyusun **setiap** jendela konvolusi
+  menjadi kolom. Hasilnya matriks `(C·KH·KW, N·oh·ow)`, tiap kolom satu jendela
   yang sudah diratakan. Ini mengganti 4 loop bersarang dengan indexing vektor.
-- **`w_col = self.params["W"].reshape(...)`** — bobot `(F, C, KH, KW)` diratakan jadi
+- **`w_col = self.params["W"].reshape(...)`**, bobot `(F, C, KH, KW)` diratakan jadi
   `(F, C·KH·KW)` agar tiap baris = satu filter yang sejajar dengan kolom `x_col`.
-- **`out = w_col @ x_col + b[:, None]`** — seluruh konvolusi jadi **satu** perkalian
+- **`out = w_col @ x_col + b[:, None]`**, seluruh konvolusi jadi **satu** perkalian
   matriks; `b[:, None]` menyiarkan (broadcast) bias per-filter ke semua posisi.
-- **`reshape` + `transpose(3, 0, 1, 2)`** — mengembalikan hasil datar `(F, N·oh·ow)`
+- **`reshape` + `transpose(3, 0, 1, 2)`**, mengembalikan hasil datar `(F, N·oh·ow)`
   ke tata letak tensor `(N, F, oh, ow)` yang diharapkan lapisan berikutnya.
-- **`self._cache = (...)`** — menyimpan `x.shape`, `x_col`, `w_col` untuk dipakai
-  saat *backward* (menghitung `dW`, `dx`) — pola "forward simpan cache, backward pakai
+- **`self._cache = (...)`**, menyimpan `x.shape`, `x_col`, `w_col` untuk dipakai
+  saat *backward* (menghitung `dW`, `dx`), pola "forward simpan cache, backward pakai
   cache" yang seragam di semua lapisan.
 
 ## A.2 im2col & col2im
 
 Konvolusi naif berupa empat perulangan bersarang sangat lambat di Python, sehingga `im2col` mengubah tiap jendela konvolusi menjadi satu kolom matriks agar seluruh operasi menjadi satu perkalian matriks. `col2im` adalah kebalikannya: menebar (dan menjumlahkan) gradien kolom kembali ke bentuk citra saat backward.
 
-> 💡 **Untuk awam:** im2col ibarat menggunting tiap "jendela" pada foto lalu menempelkannya berjajar menjadi satu kolom rapi, supaya mesin bisa menghitung semuanya sekaligus. col2im adalah langkah baliknya: menempelkan potongan-potongan itu kembali ke posisi asalnya di foto. Karena satu titik foto bisa dipakai oleh beberapa jendela, saat dikembalikan nilainya dijumlahkan, bukan ditimpa.
+> **Untuk awam:** im2col ibarat menggunting tiap "jendela" pada foto lalu menempelkannya berjajar menjadi satu kolom rapi, supaya mesin bisa menghitung semuanya sekaligus. col2im adalah langkah baliknya: menempelkan potongan-potongan itu kembali ke posisi asalnya di foto. Karena satu titik foto bisa dipakai oleh beberapa jendela, saat dikembalikan nilainya dijumlahkan, bukan ditimpa.
 
-:::pair Gambar A.2 — Alur im2col dan col2im (`src/cnn/tensor_utils.py`)
+:::pair Gambar A.2, Alur im2col dan col2im (`src/cnn/tensor_utils.py`)
 ```python
 def conv_output_size(in_size, kernel, stride, pad):
     return (in_size - kernel + 2 * pad) // stride + 1
@@ -1088,27 +1088,27 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`conv_output_size(...) return (in_size - kernel + 2 * pad) // stride + 1`** — rumus baku ukuran feature map. Untuk masukan `in_size`, kernel `kernel`, langkah `stride`, dan padding `pad`, ia menghasilkan berapa banyak posisi jendela yang muat ke satu arah (tinggi atau lebar). Pembagian `//` (integer) membuang sisa yang tak muat penuh.
-- **`_get_im2col_indices(...)`** — menghitung tiga array indeks (`i` baris, `j` kolom, `d` kanal) yang, bila dipakai langsung untuk meng-index citra ber-padding, menarik seluruh patch konvolusi sekaligus tanpa perulangan Python.
-- **`i0 = np.repeat(np.arange(kh), kw)` lalu `i0 = np.tile(i0, c)`** — `i0` adalah offset baris di dalam satu kernel (0..kh-1), tiap nilai diulang `kw` kali agar sepadan dengan lebar kernel, lalu diulang `c` kali agar berlaku untuk setiap kanal.
-- **`i1 = stride * np.repeat(np.arange(out_h), out_w)`** — offset baris untuk tiap posisi jendela pada output; dikali `stride` karena tiap langkah jendela menggeser masukan sejauh `stride`.
-- **`j0 = np.tile(np.arange(kw), kh * c)` dan `j1 = stride * np.tile(np.arange(out_w), out_h)`** — pasangan kolom dari `i0`/`i1`: `j0` offset kolom di dalam kernel, `j1` offset kolom antar posisi jendela.
-- **`i = i0.reshape(-1, 1) + i1.reshape(1, -1)`** — penjumlahan broadcast kolom-vektor `(i0)` dengan baris-vektor `(i1)` menghasilkan matriks indeks baris berukuran `(C·KH·KW, out_h·out_w)`: setiap sel adalah koordinat baris absolut satu piksel di dalam satu jendela. `j` disusun serupa untuk kolom.
-- **`d = np.repeat(np.arange(c), kh * kw).reshape(-1, 1)`** — indeks kanal untuk tiap baris matriks kolom; satu kolom-vektor yang di-broadcast ke seluruh posisi jendela.
-- **`x_padded = np.pad(...)`** — menambahkan bingkai nol setebal `pad` di sekeliling tinggi & lebar agar tepi citra ikut terkonvolusi.
-- **`cols = x_padded[:, d, i, j]`** — inti trik: fancy indexing memakai `d`, `i`, `j` menarik semua jendela sekaligus, menghasilkan `(N, C·KH·KW, out_h·out_w)`.
-- **`cols = cols.transpose(1, 2, 0).reshape(kh * kw * c, -1)`** — mengatur ulang sumbu menjadi `(C·KH·KW, N·oh·ow)`: tiap kolom = satu jendela yang sudah diratakan, dengan urutan spasial paling lambat dan batch paling cepat.
-- **`col2im(...)` `x_padded = np.zeros(...)`** — menyiapkan kanvas nol seukuran citra ber-padding untuk menampung akumulasi gradien.
-- **`np.add.at(x_padded, (slice(None), d, i, j), cols_reshaped)`** — kebalikan dari indexing pada `im2col`. Karena `stride < kernel` membuat satu piksel muncul di banyak jendela, `np.add.at` menjumlahkan (bukan menimpa) semua kontribusi ke posisi yang sama.
-- **`if pad == 0: return x_padded ... return x_padded[:, :, pad:-pad, pad:-pad]`** — memangkas bingkai padding agar hasil kembali ke ukuran citra asli; bila tak ada padding, dikembalikan apa adanya.
+- **`conv_output_size(...) return (in_size - kernel + 2 * pad) // stride + 1`**, rumus baku ukuran feature map. Untuk masukan `in_size`, kernel `kernel`, langkah `stride`, dan padding `pad`, ia menghasilkan berapa banyak posisi jendela yang muat ke satu arah (tinggi atau lebar). Pembagian `//` (integer) membuang sisa yang tak muat penuh.
+- **`_get_im2col_indices(...)`**, menghitung tiga array indeks (`i` baris, `j` kolom, `d` kanal) yang, bila dipakai langsung untuk meng-index citra ber-padding, menarik seluruh patch konvolusi sekaligus tanpa perulangan Python.
+- **`i0 = np.repeat(np.arange(kh), kw)` lalu `i0 = np.tile(i0, c)`**, `i0` adalah offset baris di dalam satu kernel (0..kh-1), tiap nilai diulang `kw` kali agar sepadan dengan lebar kernel, lalu diulang `c` kali agar berlaku untuk setiap kanal.
+- **`i1 = stride * np.repeat(np.arange(out_h), out_w)`**, offset baris untuk tiap posisi jendela pada output; dikali `stride` karena tiap langkah jendela menggeser masukan sejauh `stride`.
+- **`j0 = np.tile(np.arange(kw), kh * c)` dan `j1 = stride * np.tile(np.arange(out_w), out_h)`**, pasangan kolom dari `i0`/`i1`: `j0` offset kolom di dalam kernel, `j1` offset kolom antar posisi jendela.
+- **`i = i0.reshape(-1, 1) + i1.reshape(1, -1)`**, penjumlahan broadcast kolom-vektor `(i0)` dengan baris-vektor `(i1)` menghasilkan matriks indeks baris berukuran `(C·KH·KW, out_h·out_w)`: setiap sel adalah koordinat baris absolut satu piksel di dalam satu jendela. `j` disusun serupa untuk kolom.
+- **`d = np.repeat(np.arange(c), kh * kw).reshape(-1, 1)`**, indeks kanal untuk tiap baris matriks kolom; satu kolom-vektor yang di-broadcast ke seluruh posisi jendela.
+- **`x_padded = np.pad(...)`**, menambahkan bingkai nol setebal `pad` di sekeliling tinggi & lebar agar tepi citra ikut terkonvolusi.
+- **`cols = x_padded[:, d, i, j]`**, inti trik: fancy indexing memakai `d`, `i`, `j` menarik semua jendela sekaligus, menghasilkan `(N, C·KH·KW, out_h·out_w)`.
+- **`cols = cols.transpose(1, 2, 0).reshape(kh * kw * c, -1)`**, mengatur ulang sumbu menjadi `(C·KH·KW, N·oh·ow)`: tiap kolom = satu jendela yang sudah diratakan, dengan urutan spasial paling lambat dan batch paling cepat.
+- **`col2im(...)` `x_padded = np.zeros(...)`**, menyiapkan kanvas nol seukuran citra ber-padding untuk menampung akumulasi gradien.
+- **`np.add.at(x_padded, (slice(None), d, i, j), cols_reshaped)`**, kebalikan dari indexing pada `im2col`. Karena `stride < kernel` membuat satu piksel muncul di banyak jendela, `np.add.at` menjumlahkan (bukan menimpa) semua kontribusi ke posisi yang sama.
+- **`if pad == 0: return x_padded ... return x_padded[:, :, pad:-pad, pad:-pad]`**, memangkas bingkai padding agar hasil kembali ke ukuran citra asli; bila tak ada padding, dikembalikan apa adanya.
 
 ## A.3 Konvolusi backward
 
 `Conv2D.backward` menurunkan tiga gradien dari `dout`: terhadap bias (`db`), bobot (`dW`), dan masukan (`dX`). Karena forward memakai perkalian matriks `W_col @ X_col`, backward-nya juga cukup memakai transpos dan perkalian matriks, ditutup `col2im` untuk mengembalikan `dX` ke bentuk citra.
 
-> 💡 **Untuk awam:** Bagian ini menghitung, untuk tiap "kenop pengatur" (bobot) di dalam model, seberapa besar dan ke arah mana ia harus diputar agar tebakan model jadi lebih benar. Ibarat mengoreksi resep masakan: setelah mencicipi, kita tahu garam perlu ditambah sedikit dan gula dikurangi. Angka-angka inilah yang nanti dipakai untuk memperbaiki model langkah demi langkah.
+> **Untuk awam:** Bagian ini menghitung, untuk tiap "kenop pengatur" (bobot) di dalam model, seberapa besar dan ke arah mana ia harus diputar agar tebakan model jadi lebih benar. Ibarat mengoreksi resep masakan: setelah mencicipi, kita tahu garam perlu ditambah sedikit dan gula dikurangi. Angka-angka inilah yang nanti dipakai untuk memperbaiki model langkah demi langkah.
 
-:::pair Gambar A.3 — Aliran gradien Conv2D.backward (`src/cnn/layers.py`)
+:::pair Gambar A.3, Aliran gradien Conv2D.backward (`src/cnn/layers.py`)
 ```python
 def backward(self, dout):
     x_shape, x_col, w_col, out_h, out_w = self._cache
@@ -1141,21 +1141,21 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`x_shape, x_col, w_col, out_h, out_w = self._cache`** — membongkar cache yang disimpan `forward`: bentuk masukan asli, matriks kolom masukan `x_col`, bobot terata `w_col`, serta ukuran output. Nilai-nilai ini dipakai ulang agar backward tak perlu menghitung `im2col` lagi.
-- **`n = x_shape[0]`** — ukuran batch, diambil dari elemen pertama bentuk masukan.
-- **`dout_r = dout.transpose(1, 2, 3, 0).reshape(self.out_channels, -1)`** — menata ulang gradien keluaran `(N, F, oh, ow)` menjadi `(F, N·oh·ow)`. Ini membalik urutan sumbu yang dilakukan forward (`transpose(3, 0, 1, 2)`) agar `dout` selaras dengan tata letak matriks `w_col @ x_col`.
-- **`self.grads["b"] = dout_r.sum(axis=1)`** — gradien bias = jumlah gradien atas semua posisi spasial dan seluruh batch, menyisakan satu nilai per filter `(F,)`. Sesuai fakta bahwa bias `b[f]` ditambahkan ke tiap posisi output filter `f`.
-- **`dw_col = dout_r @ x_col.T`** — gradien bobot dalam bentuk terata `(F, C·KH·KW)`. Karena forward `out = w_col @ x_col`, turunan terhadap `w_col` adalah `dout · x_col^T`.
-- **`self.grads["W"] = dw_col.reshape(self.params["W"].shape)`** — mengembalikan `dw_col` ke bentuk tensor bobot asli `(F, C, KH, KW)` agar cocok untuk pembaruan parameter oleh optimizer.
-- **`dx_col = w_col.T @ dout_r`** — gradien terhadap masukan dalam bentuk kolom `(C·KH·KW, N·oh·ow)`. Ini turunan `out = w_col @ x_col` terhadap `x_col`, yakni `w_col^T · dout`.
-- **`dx = col2im(dx_col, x_shape, self.kh, self.kw, self.stride, self.pad)`** — menebar gradien kolom kembali ke bentuk citra `(N, C, H, W)`, menjumlahkan kontribusi tiap piksel yang muncul di banyak jendela (lihat A.2).
-- **`return dx`** — mengembalikan gradien terhadap masukan agar diteruskan ke lapisan sebelumnya dalam rantai backpropagation.
+- **`x_shape, x_col, w_col, out_h, out_w = self._cache`**, membongkar cache yang disimpan `forward`: bentuk masukan asli, matriks kolom masukan `x_col`, bobot terata `w_col`, serta ukuran output. Nilai-nilai ini dipakai ulang agar backward tak perlu menghitung `im2col` lagi.
+- **`n = x_shape[0]`**, ukuran batch, diambil dari elemen pertama bentuk masukan.
+- **`dout_r = dout.transpose(1, 2, 3, 0).reshape(self.out_channels, -1)`**, menata ulang gradien keluaran `(N, F, oh, ow)` menjadi `(F, N·oh·ow)`. Ini membalik urutan sumbu yang dilakukan forward (`transpose(3, 0, 1, 2)`) agar `dout` selaras dengan tata letak matriks `w_col @ x_col`.
+- **`self.grads["b"] = dout_r.sum(axis=1)`**, gradien bias = jumlah gradien atas semua posisi spasial dan seluruh batch, menyisakan satu nilai per filter `(F)`. Sesuai fakta bahwa bias `b[f]` ditambahkan ke tiap posisi output filter `f`.
+- **`dw_col = dout_r @ x_col.T`**, gradien bobot dalam bentuk terata `(F, C·KH·KW)`. Karena forward `out = w_col @ x_col`, turunan terhadap `w_col` adalah `dout · x_col^T`.
+- **`self.grads["W"] = dw_col.reshape(self.params["W"].shape)`**, mengembalikan `dw_col` ke bentuk tensor bobot asli `(F, C, KH, KW)` agar cocok untuk pembaruan parameter oleh optimizer.
+- **`dx_col = w_col.T @ dout_r`**, gradien terhadap masukan dalam bentuk kolom `(C·KH·KW, N·oh·ow)`. Ini turunan `out = w_col @ x_col` terhadap `x_col`, yakni `w_col^T · dout`.
+- **`dx = col2im(dx_col, x_shape, self.kh, self.kw, self.stride, self.pad)`**, menebar gradien kolom kembali ke bentuk citra `(N, C, H, W)`, menjumlahkan kontribusi tiap piksel yang muncul di banyak jendela (lihat A.2).
+- **`return dx`**, mengembalikan gradien terhadap masukan agar diteruskan ke lapisan sebelumnya dalam rantai backpropagation.
 
 ## A.4 ReLU (aktivasi tak-linear)
 
 ReLU membuang bagian negatif sinyal: `f(u) = max(0, u)`. Kunci implementasinya adalah menyimpan mask boolean `x > 0` saat forward agar backward tinggal meneruskan gradien di posisi yang aktif saja.
 
-:::pair Gambar A.4 — Forward-backward ReLU lewat mask boolean (`src/cnn/layers.py`)
+:::pair Gambar A.4, Forward-backward ReLU lewat mask boolean (`src/cnn/layers.py`)
 ```python
 class ReLU(Layer):
     """Rectified Linear Unit: f(u) = max(0, u), f'(u) = 1[u > 0]."""
@@ -1184,16 +1184,16 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`self._mask = None`** — slot cache; diisi saat forward, dipakai lagi saat backward tanpa perlu menyimpan seluruh `x`.
-- **`self._mask = x > 0`** — menghasilkan array boolean berukuran sama dengan `x`, bernilai `True` (dianggap `1`) di posisi positif dan `False` (dianggap `0`) di posisi nol/negatif. Inilah turunan `f'(u) = 1[u > 0]`.
-- **`return x * self._mask`** — perkalian elemen-per-elemen: nilai positif lolos apa adanya, nilai negatif menjadi `0`. Broadcasting boolean ke float membuat `True→1.0`, `False→0.0`.
-- **`return dout * self._mask`** — aturan rantai: gradien hulu `dout` hanya diteruskan pada posisi yang tadinya aktif; posisi mati menerima gradien `0` sehingga tidak ikut memperbarui bobot.
+- **`self._mask = None`**, slot cache; diisi saat forward, dipakai lagi saat backward tanpa perlu menyimpan seluruh `x`.
+- **`self._mask = x > 0`**, menghasilkan array boolean berukuran sama dengan `x`, bernilai `True` (dianggap `1`) di posisi positif dan `False` (dianggap `0`) di posisi nol/negatif. Inilah turunan `f'(u) = 1[u > 0]`.
+- **`return x * self._mask`**, perkalian elemen-per-elemen: nilai positif lolos apa adanya, nilai negatif menjadi `0`. Broadcasting boolean ke float membuat `True→1.0`, `False→0.0`.
+- **`return dout * self._mask`**, aturan rantai: gradien hulu `dout` hanya diteruskan pada posisi yang tadinya aktif; posisi mati menerima gradien `0` sehingga tidak ikut memperbarui bobot.
 
 ## A.5 MaxPool2D (subsampling maksimum)
 
 MaxPool mengambil nilai terbesar tiap jendela `pool × pool`, mengecilkan resolusi spasial. Trik intinya: forward menyimpan **argmax** tiap jendela, dan backward hanya mengalirkan gradien ke sel pemenang itu.
 
-:::pair Gambar A.5 — Forward menyimpan argmax, backward menyebar ke pemenang (`src/cnn/layers.py`)
+:::pair Gambar A.5, Forward menyimpan argmax, backward menyebar ke pemenang (`src/cnn/layers.py`)
 ```python
 def forward(self, x):
     n, c, h, w = x.shape
@@ -1238,24 +1238,24 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`x_reshaped = x.reshape(n * c, 1, h, w)`** — tiap kanal diperlakukan sebagai citra 1-kanal terpisah, supaya pooling dihitung per-kanal (tidak mencampur antar-kanal).
-- **`x_col = im2col(...)`** — merentang tiap jendela `pool × pool` menjadi satu kolom; barisnya `pool*pool` elemen, kolomnya sebanyak `(N*C)*out_h*out_w` jendela.
-- **`max_idx = np.argmax(x_col, axis=0)`** — indeks baris pemenang di tiap kolom; inilah "alamat" nilai maksimum yang wajib disimpan untuk backward.
-- **`out = x_col[max_idx, np.arange(x_col.shape[1])]`** — indexing lanjutan: untuk tiap kolom, ambil elemen di baris pemenangnya.
-- **`out.reshape(out_h, out_w, n, c).transpose(2, 3, 0, 1)`** — mengembalikan hasil datar ke tata letak `(N, C, out_h, out_w)`.
-- **`self._cache = (..., max_idx, ...)`** — menyimpan bentuk tensor dan `max_idx` agar backward tahu ke mana gradien dialirkan.
-- **`dout_flat = dout.transpose(2, 3, 0, 1).ravel()`** — meratakan gradien hulu mengikuti urutan kolom yang sama seperti forward.
-- **`dx_col = np.zeros(x_col_shape, ...)`** — kanvas gradien nol; mayoritas sel akan tetap nol karena bukan pemenang.
-- **`dx_col[max_idx, np.arange(...)] = dout_flat`** — inti backward: hanya baris pemenang tiap kolom yang diisi gradien; sel non-pemenang tetap `0`.
-- **`col2im(...)` lalu `dx.reshape(x_shape)`** — melipat kembali kolom menjadi peta gradien `(N*C, 1, H, W)`, lalu dikembalikan ke bentuk masukan asli `(N, C, H, W)`.
+- **`x_reshaped = x.reshape(n * c, 1, h, w)`**, tiap kanal diperlakukan sebagai citra 1-kanal terpisah, supaya pooling dihitung per-kanal (tidak mencampur antar-kanal).
+- **`x_col = im2col(...)`**, merentang tiap jendela `pool × pool` menjadi satu kolom; barisnya `pool*pool` elemen, kolomnya sebanyak `(N*C)*out_h*out_w` jendela.
+- **`max_idx = np.argmax(x_col, axis=0)`**, indeks baris pemenang di tiap kolom; inilah "alamat" nilai maksimum yang wajib disimpan untuk backward.
+- **`out = x_col[max_idx, np.arange(x_col.shape[1])]`**, indexing lanjutan: untuk tiap kolom, ambil elemen di baris pemenangnya.
+- **`out.reshape(out_h, out_w, n, c).transpose(2, 3, 0, 1)`**, mengembalikan hasil datar ke tata letak `(N, C, out_h, out_w)`.
+- **`self._cache = (..., max_idx, ...)`**, menyimpan bentuk tensor dan `max_idx` agar backward tahu ke mana gradien dialirkan.
+- **`dout_flat = dout.transpose(2, 3, 0, 1).ravel()`**, meratakan gradien hulu mengikuti urutan kolom yang sama seperti forward.
+- **`dx_col = np.zeros(x_col_shape, ...)`**, kanvas gradien nol; mayoritas sel akan tetap nol karena bukan pemenang.
+- **`dx_col[max_idx, np.arange(...)] = dout_flat`**, inti backward: hanya baris pemenang tiap kolom yang diisi gradien; sel non-pemenang tetap `0`.
+- **`col2im(...)` lalu `dx.reshape(x_shape)`**, melipat kembali kolom menjadi peta gradien `(N*C, 1, H, W)`, lalu dikembalikan ke bentuk masukan asli `(N, C, H, W)`.
 
 ## A.6 Flatten (perataan tensor)
 
 Flatten menjembatani bagian konvolusi dan bagian terhubung-penuh: mengubah tensor 4-D menjadi matriks 2-D. Karena hanya menata ulang bentuk, backward-nya cukup mengembalikan bentuk semula.
 
-> 💡 **Untuk awam:** Flatten seperti menuang isi beberapa kotak bersusun menjadi satu barisan panjang yang berjajar rapi. Tidak ada isi yang ditambah atau dibuang — hanya susunannya yang dirapikan agar bisa diproses lapisan berikutnya. Saat menghitung mundur, barisan panjang itu tinggal dituang kembali ke kotak-kotak semula.
+> **Untuk awam:** Flatten seperti menuang isi beberapa kotak bersusun menjadi satu barisan panjang yang berjajar rapi. Tidak ada isi yang ditambah atau dibuang, hanya susunannya yang dirapikan agar bisa diproses lapisan berikutnya. Saat menghitung mundur, barisan panjang itu tinggal dituang kembali ke kotak-kotak semula.
 
-:::pair Gambar A.6 — Reshape maju-mundur tanpa mengubah nilai (`src/cnn/layers.py`)
+:::pair Gambar A.6, Reshape maju-mundur tanpa mengubah nilai (`src/cnn/layers.py`)
 ```python
 class Flatten(Layer):
     """Ratakan (N, C, H, W) -> (N, C*H*W) sebelum lapisan terhubung penuh."""
@@ -1283,18 +1283,18 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`self._shape = None`** — slot untuk mengingat bentuk 4-D masukan sebelum diratakan.
-- **`self._shape = x.shape`** — menyimpan `(N, C, H, W)` agar backward bisa memulihkan bentuknya persis.
-- **`return x.reshape(x.shape[0], -1)`** — mempertahankan dimensi batch `N`, lalu `-1` membiarkan NumPy menghitung sendiri `C*H*W` menjadi satu vektor per sampel. Nilai tidak berubah, hanya tata letak.
-- **`return dout.reshape(self._shape)`** — operasi kebalikannya: gradien 2-D dari Dense dilipat kembali ke bentuk 4-D asli agar cocok untuk lapisan konvolusi/pooling di bawahnya.
+- **`self._shape = None`**, slot untuk mengingat bentuk 4-D masukan sebelum diratakan.
+- **`self._shape = x.shape`**, menyimpan `(N, C, H, W)` agar backward bisa memulihkan bentuknya persis.
+- **`return x.reshape(x.shape[0], -1)`**, mempertahankan dimensi batch `N`, lalu `-1` membiarkan NumPy menghitung sendiri `C*H*W` menjadi satu vektor per sampel. Nilai tidak berubah, hanya tata letak.
+- **`return dout.reshape(self._shape)`**, operasi kebalikannya: gradien 2-D dari Dense dilipat kembali ke bentuk 4-D asli agar cocok untuk lapisan konvolusi/pooling di bawahnya.
 
 ## A.7 Dense (lapisan terhubung penuh)
 
 Dense adalah perkalian matriks klasik `y = xW + b`. Ia menyimpan masukan `x` saat forward, lalu memakainya untuk menghitung gradien bobot `dW`, bias `db`, dan gradien masukan `dx` saat backward.
 
-> 💡 **Untuk awam:** Lapisan ini bekerja seperti menghitung nilai akhir berbobot: tiap fitur dikalikan dengan bobot kepentingannya, lalu semuanya dijumlahkan menjadi satu skor. Fitur yang dianggap penting diberi bobot besar, yang kurang penting diberi bobot kecil. Dari skor inilah model akhirnya memutuskan "normal" atau "berlubang".
+> **Untuk awam:** Lapisan ini bekerja seperti menghitung nilai akhir berbobot: tiap fitur dikalikan dengan bobot kepentingannya, lalu semuanya dijumlahkan menjadi satu skor. Fitur yang dianggap penting diberi bobot besar, yang kurang penting diberi bobot kecil. Dari skor inilah model akhirnya memutuskan "normal" atau "berlubang".
 
-:::pair Gambar A.7 — Forward y=xW+b dan tiga gradien backward (`src/cnn/layers.py`)
+:::pair Gambar A.7, Forward y=xW+b dan tiga gradien backward (`src/cnn/layers.py`)
 ```python
 def forward(self, x):
     self._x = x
@@ -1319,17 +1319,17 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`self._x = x`** — menyimpan masukan; wajib karena `dW` membutuhkan `x` saat backward.
-- **`return x @ self.params["W"] + self.params["b"]`** — perkalian matriks `(N, in) @ (in, out) = (N, out)`, lalu `b` di-broadcast ke tiap baris (sampel).
-- **`self.grads["W"] = self._x.T @ dout`** — turunan terhadap bobot: `x^T @ dout` menghasilkan matriks `(in, out)` sebangun dengan `W`.
-- **`self.grads["b"] = dout.sum(axis=0)`** — turunan terhadap bias: menjumlahkan gradien seluruh sampel dalam batch (sumbu `0`), sebab `b` dipakai bersama oleh semua baris.
-- **`return dout @ self.params["W"].T`** — turunan terhadap masukan `(N, out) @ (out, in) = (N, in)`, diteruskan sebagai `dout` bagi lapisan sebelumnya.
+- **`self._x = x`**, menyimpan masukan; wajib karena `dW` membutuhkan `x` saat backward.
+- **`return x @ self.params["W"] + self.params["b"]`**, perkalian matriks `(N, in) @ (in, out) = (N, out)`, lalu `b` di-broadcast ke tiap baris (sampel).
+- **`self.grads["W"] = self._x.T @ dout`**, turunan terhadap bobot: `x^T @ dout` menghasilkan matriks `(in, out)` sebangun dengan `W`.
+- **`self.grads["b"] = dout.sum(axis=0)`**, turunan terhadap bias: menjumlahkan gradien seluruh sampel dalam batch (sumbu `0`), sebab `b` dipakai bersama oleh semua baris.
+- **`return dout @ self.params["W"].T`**, turunan terhadap masukan `(N, out) @ (out, in) = (N, in)`, diteruskan sebagai `dout` bagi lapisan sebelumnya.
 
 ## A.8 Dropout (regularisasi inverted dropout)
 
 Dropout mematikan sebagian unit secara acak saat latih untuk mencegah overfitting, dan menjadi identitas saat evaluasi. Skema *inverted dropout* langsung menskalakan `1/(1-p)` saat latih agar inferensi tak perlu penyesuaian.
 
-:::pair Gambar A.8 — Cabang training vs eval dan mask terskala (`src/cnn/layers.py`)
+:::pair Gambar A.8, Cabang training vs eval dan mask terskala (`src/cnn/layers.py`)
 ```python
 def forward(self, x):
     if not self.training or self.p <= 0.0:
@@ -1359,19 +1359,19 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`if not self.training or self.p <= 0.0:`** — cabang eval/no-op: saat mode evaluasi atau peluang buang `p` nol, lapisan jadi identitas.
-- **`self._mask = None; return x`** — menandai tidak ada mask (dipakai backward) dan meneruskan `x` tanpa perubahan.
-- **`keep = 1.0 - self.p`** — peluang sebuah unit dipertahankan.
-- **`self._mask = (self.rng.random(x.shape) < keep) / keep`** — bangun mask Bernoulli: `rng.random < keep` menghasilkan `True`/`False` (unit hidup/mati), lalu dibagi `keep` sehingga unit yang lolos diperbesar `1/(1-p)`. Inilah *inverted dropout* yang menjaga ekspektasi keluaran tetap sama.
-- **`return x * self._mask`** — terapkan mask: sebagian unit di-nol-kan, sisanya terskala.
-- **`if self._mask is None: return dout`** — pada mode eval, gradien lewat tanpa diubah.
-- **`return dout * self._mask`** — pada mode latih, gradien mengikuti mask yang sama persis dengan forward (unit mati menerima gradien `0`, unit hidup terskala `1/keep`).
+- **`if not self.training or self.p <= 0.0:`**, cabang eval/no-op: saat mode evaluasi atau peluang buang `p` nol, lapisan jadi identitas.
+- **`self._mask = None; return x`**, menandai tidak ada mask (dipakai backward) dan meneruskan `x` tanpa perubahan.
+- **`keep = 1.0 - self.p`**, peluang sebuah unit dipertahankan.
+- **`self._mask = (self.rng.random(x.shape) < keep) / keep`**, bangun mask Bernoulli: `rng.random < keep` menghasilkan `True`/`False` (unit hidup/mati), lalu dibagi `keep` sehingga unit yang lolos diperbesar `1/(1-p)`. Inilah *inverted dropout* yang menjaga ekspektasi keluaran tetap sama.
+- **`return x * self._mask`**, terapkan mask: sebagian unit di-nol-kan, sisanya terskala.
+- **`if self._mask is None: return dout`**, pada mode eval, gradien lewat tanpa diubah.
+- **`return dout * self._mask`**, pada mode latih, gradien mengikuti mask yang sama persis dengan forward (unit mati menerima gradien `0`, unit hidup terskala `1/keep`).
 
 ## A.9 Softmax + Cross-Entropy
 
 Softmax mengubah skor mentah menjadi peluang antar-kelas, lalu cross-entropy mengukur seberapa jauh peluang itu dari label benar. Keduanya diturunkan bersama karena gradien gabungannya menyederhana menjadi `(p − y)/N`.
 
-:::pair Gambar A.9 — Alur forward loss dan backward gradien softmax+cross-entropy (`src/cnn/losses.py`)
+:::pair Gambar A.9, Alur forward loss dan backward gradien softmax+cross-entropy (`src/cnn/losses.py`)
 ```python
 def softmax(z):
     """Softmax stabil-numerik (kurangi maksimum tiap baris sebelum eksponen)."""
@@ -1413,16 +1413,16 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`z_shift = z - z.max(axis=1, keepdims=True)`** — kurangi nilai maksimum tiap baris (tiap contoh) sebelum eksponen. Ini trik stabil-numerik: hasil softmax tak berubah, tapi mencegah `np.exp` meluap (overflow) untuk skor besar.
-- **`exp = np.exp(z_shift)`** dan **`exp / exp.sum(axis=1, keepdims=True)`** — eksponenkan lalu normalisasi per baris agar tiap baris berjumlah 1, menghasilkan distribusi peluang `p_i = e^{z_i} / Σ_j e^{z_j}`.
-- **`self._probs = softmax(scores)`** — simpan peluang hasil forward; dipakai lagi saat backward tanpa hitung ulang.
-- **`self._y = y`** dan **`self._n = scores.shape[0]`** — simpan indeks kelas benar (integer, bukan one-hot) dan jumlah contoh `N` untuk perataan.
-- **`self._probs[np.arange(self._n), y]`** — pengindeksan fancy: ambil peluang di kolom kelas benar untuk setiap baris sekaligus, menghasilkan vektor sepanjang `N`.
-- **`-np.log(... + 1e-12)`** — negatif log-peluang kelas benar; `1e-12` menghindari `log(0)` bila peluang nyaris nol.
-- **`float(np.mean(correct_logprobs))`** — rata-ratakan atas seluruh batch menjadi satu skalar loss `L = −(1/N) Σ ln p kelas benar`.
-- **`grad = self._probs.copy()`** — mulai gradien dari salinan `p` (jangan ubah `_probs` aslinya).
-- **`grad[np.arange(self._n), self._y] -= 1.0`** — kurangi 1 hanya di posisi kelas benar. Karena `y` one-hot bernilai 1 di kelas benar dan 0 di lain, langkah ini setara `p − y`.
-- **`grad /= self._n`** — bagi `N` agar konsisten dengan loss yang dirata-ratakan, menghasilkan `(p − y)/N`.
+- **`z_shift = z - z.max(axis=1, keepdims=True)`**, kurangi nilai maksimum tiap baris (tiap contoh) sebelum eksponen. Ini trik stabil-numerik: hasil softmax tak berubah, tapi mencegah `np.exp` meluap (overflow) untuk skor besar.
+- **`exp = np.exp(z_shift)`** dan **`exp / exp.sum(axis=1, keepdims=True)`**, eksponenkan lalu normalisasi per baris agar tiap baris berjumlah 1, menghasilkan distribusi peluang `p_i = e^{z_i} / Σ_j e^{z_j}`.
+- **`self._probs = softmax(scores)`**, simpan peluang hasil forward; dipakai lagi saat backward tanpa hitung ulang.
+- **`self._y = y`** dan **`self._n = scores.shape[0]`**, simpan indeks kelas benar (integer, bukan one-hot) dan jumlah contoh `N` untuk perataan.
+- **`self._probs[np.arange(self._n), y]`**, pengindeksan fancy: ambil peluang di kolom kelas benar untuk setiap baris sekaligus, menghasilkan vektor sepanjang `N`.
+- **`-np.log(... + 1e-12)`**, negatif log-peluang kelas benar; `1e-12` menghindari `log(0)` bila peluang nyaris nol.
+- **`float(np.mean(correct_logprobs))`**, rata-ratakan atas seluruh batch menjadi satu skalar loss `L = −(1/N) Σ ln p kelas benar`.
+- **`grad = self._probs.copy()`**, mulai gradien dari salinan `p` (jangan ubah `_probs` aslinya).
+- **`grad[np.arange(self._n), self._y] -= 1.0`**, kurangi 1 hanya di posisi kelas benar. Karena `y` one-hot bernilai 1 di kelas benar dan 0 di lain, langkah ini setara `p − y`.
+- **`grad /= self._n`**, bagi `N` agar konsisten dengan loss yang dirata-ratakan, menghasilkan `(p − y)/N`.
 
 **Intuisi kenapa gradiennya menyederhana jadi (p − y):** turunan cross-entropy terhadap peluang, `∂L/∂p_i = −y_i/p_i`, tampak rumit karena ada pembagian `p_i`. Namun turunan softmax terhadap skor punya bentuk `∂p_i/∂z_j = p_i(δ_ij − p_j)`. Saat aturan rantai mengalikan keduanya dan menjumlahkan atas `i`, faktor `1/p_i` saling meniadakan dengan `p_i` dari softmax, dan suku-suku yang tersisa runtuh rapi menjadi `∂L/∂z_j = p_j − y_j`. Jadi gradien terhadap skor mentah hanyalah selisih antara peluang prediksi dan target one-hot: bila model sudah yakin dan benar (`p ≈ y`) gradien mendekati nol, sedangkan makin salah prediksinya makin besar dorongan koreksinya, tanpa pembagian yang bisa membuat perhitungan tidak stabil.
 
@@ -1430,9 +1430,9 @@ flowchart TB
 
 Inisialisasi yang baik menjaga varians aktivasi stabil antar lapisan agar sinyal tidak meledak atau menghilang. He dipakai untuk ReLU, Xavier untuk lapisan linier/softmax; keduanya menyekala simpangan baku bobot terhadap fan-in.
 
-> 💡 **Untuk awam:** Sebelum model belajar, semua kenop pengaturnya (bobot) diisi dengan tebakan acak sebagai titik awal. Tetapi tebakan acak itu tidak asal — takarannya disetel hati-hati agar sinyal yang mengalir di jaringan tidak "meledak" jadi terlalu besar atau "menghilang" jadi terlalu kecil. Seperti menyetel volume awal radio agar tidak langsung memekakkan telinga atau justru tak terdengar.
+> **Untuk awam:** Sebelum model belajar, semua kenop pengaturnya (bobot) diisi dengan tebakan acak sebagai titik awal. Tetapi tebakan acak itu tidak asal, takarannya disetel hati-hati agar sinyal yang mengalir di jaringan tidak "meledak" jadi terlalu besar atau "menghilang" jadi terlalu kecil. Seperti menyetel volume awal radio agar tidak langsung memekakkan telinga atau justru tak terdengar.
 
-:::pair Gambar A.10 — Dua skema inisialisasi bobot Gauss berdasarkan fan-in (`src/cnn/init.py`)
+:::pair Gambar A.10, Dua skema inisialisasi bobot Gauss berdasarkan fan-in (`src/cnn/init.py`)
 ```python
 def he_normal(shape, fan_in, rng):
     """Inisialisasi He: std = sqrt(2 / fan_in)."""
@@ -1458,21 +1458,21 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`he_normal(shape, fan_in, rng)`** — fungsi inisialisasi He. `shape` bentuk tensor bobot, `fan_in` jumlah masukan ke satu neuron (untuk konvolusi `n_in = C · KH · KW`), `rng` generator acak NumPy agar hasil dapat direproduksi.
-- **`std = np.sqrt(2.0 / fan_in)`** — simpangan baku He memakai faktor 2 di pembilang. Faktor 2 ini mengompensasi ReLU yang membuang setengah aktivasi (bagian negatif jadi nol), sehingga varians sinyal tetap terjaga saat merambat maju.
-- **`rng.normal(0.0, std, size=shape)`** — tarik sampel dari distribusi Gauss ber-mean 0 dan simpangan baku `std`, sebanyak dan sebentuk `shape`. Mean nol menjaga bobot simetris tanpa bias awal.
-- **`.astype(np.float64)`** — paksa tipe presisi ganda agar konsisten dengan perhitungan lain di jaringan.
-- **`xavier_normal(shape, fan_in, rng)`** — fungsi inisialisasi Xavier/Glorot, tanda tangan sama dengan He.
-- **`std = np.sqrt(1.0 / fan_in)`** — simpangan baku Xavier memakai faktor 1 (bukan 2). Cocok untuk aktivasi linier atau softmax yang tidak memangkas separuh sinyal seperti ReLU, sehingga tak perlu kompensasi ganda.
-- **Perbedaan inti He vs Xavier** — keduanya sama-sama Gauss ber-mean 0 dan menyekala `std ∝ 1/√fan_in`; hanya konstanta pembilangnya berbeda (2 untuk He, 1 untuk Xavier), menyesuaikan jenis aktivasi lapisan.
+- **`he_normal(shape, fan_in, rng)`**, fungsi inisialisasi He. `shape` bentuk tensor bobot, `fan_in` jumlah masukan ke satu neuron (untuk konvolusi `n_in = C · KH · KW`), `rng` generator acak NumPy agar hasil dapat direproduksi.
+- **`std = np.sqrt(2.0 / fan_in)`**, simpangan baku He memakai faktor 2 di pembilang. Faktor 2 ini mengompensasi ReLU yang membuang setengah aktivasi (bagian negatif jadi nol), sehingga varians sinyal tetap terjaga saat merambat maju.
+- **`rng.normal(0.0, std, size=shape)`**, tarik sampel dari distribusi Gauss ber-mean 0 dan simpangan baku `std`, sebanyak dan sebentuk `shape`. Mean nol menjaga bobot simetris tanpa bias awal.
+- **`.astype(np.float64)`**, paksa tipe presisi ganda agar konsisten dengan perhitungan lain di jaringan.
+- **`xavier_normal(shape, fan_in, rng)`**, fungsi inisialisasi Xavier/Glorot, tanda tangan sama dengan He.
+- **`std = np.sqrt(1.0 / fan_in)`**, simpangan baku Xavier memakai faktor 1 (bukan 2). Cocok untuk aktivasi linier atau softmax yang tidak memangkas separuh sinyal seperti ReLU, sehingga tak perlu kompensasi ganda.
+- **Perbedaan inti He vs Xavier**, keduanya sama-sama Gauss ber-mean 0 dan menyekala `std ∝ 1/√fan_in`; hanya konstanta pembilangnya berbeda (2 untuk He, 1 untuk Xavier), menyesuaikan jenis aktivasi lapisan.
 
 ## A.11 Perakitan LeNet-5
 
 Kelas `LeNet5` merakit seluruh lapisan (convolution, pooling, flatten, dense, dropout) menjadi satu daftar berurutan, lalu menjalankan forward/backward dengan menelusuri daftar itu. Dimensi masukan RGB 3×48×48; `flat_dim` dihitung dinamis dari `img_size` agar mendukung ukuran selain 32.
 
-> 💡 **Untuk awam:** Bagian ini merangkai semua lapisan tadi menjadi satu jalur berurutan, seperti menyusun gerbong-gerbong menjadi satu rangkaian kereta. Saat menebak, data berjalan maju menyusuri jalur dari awal ke akhir (forward); saat belajar dari kesalahan, koreksi berjalan mundur menyusuri jalur yang sama dari akhir ke awal (backward).
+> **Untuk awam:** Bagian ini merangkai semua lapisan tadi menjadi satu jalur berurutan, seperti menyusun gerbong-gerbong menjadi satu rangkaian kereta. Saat menebak, data berjalan maju menyusuri jalur dari awal ke akhir (forward); saat belajar dari kesalahan, koreksi berjalan mundur menyusuri jalur yang sama dari akhir ke awal (backward).
 
-:::pair Gambar A.11 — Perakitan lapisan & jalur forward/backward (`src/cnn/model.py`)
+:::pair Gambar A.11, Perakitan lapisan & jalur forward/backward (`src/cnn/model.py`)
 ```python
 class LeNet5:
     def __init__(self, num_classes=2, conv1=6, conv2=16, fc1=120, fc2=84,
@@ -1545,22 +1545,22 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`rng = np.random.default_rng(seed)`** — satu generator acak dibagikan ke semua lapisan berbobot agar inisialisasi dapat direproduksi (deterministik dari `seed`).
-- **`Conv2D(in_channels, conv1, kernel, stride=1, pad=0)`** — conv1 memetakan `in_channels` (3 untuk RGB) ke 6 peta fitur dengan kernel 5×5 tanpa padding; conv2 dari 6 ke 16 kanal.
-- **`s = (s - (kernel - 1)) // pool`** (dua kali) — menghitung ukuran spasial: tiap conv mengurangi sisi sebesar `kernel-1`, tiap pool membaginya `pool`. Untuk 48 → 22 → 9, sehingga `flat_dim = 16 · 9 · 9 = 1296`.
-- **`init="he"` vs `init="xavier"`** — fc1/fc2 diinisialisasi He (cocok untuk ReLU sesudahnya), lapisan keluaran fc3 diinisialisasi Xavier (sebelum softmax).
-- **`self.drop1 = Dropout(dropout_p, seed=seed + 1)`** — dropout hanya dipasang pada lapisan terhubung penuh; `dropout_p=0` menjadikannya identitas. Seed digeser (`+1`, `+2`) agar tiap dropout memakai mask acak berbeda.
-- **`self.layers = [...]`** — satu daftar berurutan menyatukan seluruh lapisan; menjadi sumber tunggal untuk forward, backward, iterasi parameter, dan simpan/muat.
-- **`forward`: `for layer in self.layers: out = layer.forward(out)`** — memanggil `forward` tiap lapisan secara berantai, keluaran satu menjadi masukan berikut; hasil akhir logit `(N, K)`.
-- **`backward`: `for layer in reversed(self.layers)`** — gradien `dscores` merambat mundur menembus lapisan dalam urutan terbalik (rantai turunan).
-- **`predict_proba`** — memanggil `self.eval()` agar dropout mati (inferensi deterministik), lalu memproses `x` per-batch (`batch_size=64`) dan menerapkan `softmax` tiap batch untuk hemat memori; hasil disatukan dengan `np.concatenate`.
-- **`save` / `load`** — parameter tiap lapisan disimpan dengan kunci `f"layer{li}_{name}"` (indeks posisi dalam `self.layers` + nama parameter, mis. `layer7_W`); `load` membaca kembali dengan kunci yang sama, sehingga urutan lapisan wajib identik.
+- **`rng = np.random.default_rng(seed)`**, satu generator acak dibagikan ke semua lapisan berbobot agar inisialisasi dapat direproduksi (deterministik dari `seed`).
+- **`Conv2D(in_channels, conv1, kernel, stride=1, pad=0)`**, conv1 memetakan `in_channels` (3 untuk RGB) ke 6 peta fitur dengan kernel 5×5 tanpa padding; conv2 dari 6 ke 16 kanal.
+- **`s = (s - (kernel - 1)) // pool`** (dua kali), menghitung ukuran spasial: tiap conv mengurangi sisi sebesar `kernel-1`, tiap pool membaginya `pool`. Untuk 48 → 22 → 9, sehingga `flat_dim = 16 · 9 · 9 = 1296`.
+- **`init="he"` vs `init="xavier"`**, fc1/fc2 diinisialisasi He (cocok untuk ReLU sesudahnya), lapisan keluaran fc3 diinisialisasi Xavier (sebelum softmax).
+- **`self.drop1 = Dropout(dropout_p, seed=seed + 1)`**, dropout hanya dipasang pada lapisan terhubung penuh; `dropout_p=0` menjadikannya identitas. Seed digeser (`+1`, `+2`) agar tiap dropout memakai mask acak berbeda.
+- **`self.layers = [...]`**, satu daftar berurutan menyatukan seluruh lapisan; menjadi sumber tunggal untuk forward, backward, iterasi parameter, dan simpan/muat.
+- **`forward`: `for layer in self.layers: out = layer.forward(out)`**, memanggil `forward` tiap lapisan secara berantai, keluaran satu menjadi masukan berikut; hasil akhir logit `(N, K)`.
+- **`backward`: `for layer in reversed(self.layers)`**, gradien `dscores` merambat mundur menembus lapisan dalam urutan terbalik (rantai turunan).
+- **`predict_proba`**, memanggil `self.eval()` agar dropout mati (inferensi deterministik), lalu memproses `x` per-batch (`batch_size=64`) dan menerapkan `softmax` tiap batch untuk hemat memori; hasil disatukan dengan `np.concatenate`.
+- **`save` / `load`**, parameter tiap lapisan disimpan dengan kunci `f"layer{li}_{name}"` (indeks posisi dalam `self.layers` + nama parameter, mis. `layer7_W`); `load` membaca kembali dengan kunci yang sama, sehingga urutan lapisan wajib identik.
 
 ## A.12 SGD + Momentum
 
 `SGDMomentum` memperbarui parameter dengan momentum: kecepatan `v` mengakumulasi arah gradien sebelumnya agar konvergensi lebih mulus. Weight decay L2 hanya dikenakan pada matriks bobot `W`, bukan bias.
 
-:::pair Gambar A.12 — Langkah pembaruan SGD dengan momentum (`src/cnn/optim.py`)
+:::pair Gambar A.12, Langkah pembaruan SGD dengan momentum (`src/cnn/optim.py`)
 ```python
 class SGDMomentum:
     def __init__(self, layers, lr=0.01, momentum=0.9, weight_decay=0.0):
@@ -1598,21 +1598,21 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`self.velocities[(li, name)] = np.zeros_like(p)`** — tiap parameter memperoleh vektor kecepatan awal nol, diindeks pasangan (indeks lapisan, nama parameter) agar unik.
-- **`grad = layer.grads[name]`** — mengambil gradien yang sudah dihitung `backward` untuk parameter ini.
-- **`if self.weight_decay and name == "W"`** — penalti L2 `weight_decay · theta` hanya ditambahkan bila parameter adalah bobot `W`; bias `b` sengaja dilewati (tak disusutkan).
-- **`v *= self.momentum`** — kecepatan lama diredam faktor `momentum` (mis. 0.9), mempertahankan sebagian arah langkah sebelumnya.
-- **`v -= self.lr * grad`** — menambahkan kontribusi gradien saat ini (bertanda negatif karena bergerak menuruni gradien); rumus lengkapnya `v = μv − η∇`.
-- **`layer.params[name] += v`** — parameter diperbarui in-place (`θ = θ + v`) agar referensi array di lapisan tetap sama, tidak membuat array baru.
-- **`zero_grad`** (tak ditampilkan) — menyetel semua gradien ke nol sebelum backward berikutnya.
+- **`self.velocities[(li, name)] = np.zeros_like(p)`**, tiap parameter memperoleh vektor kecepatan awal nol, diindeks pasangan (indeks lapisan, nama parameter) agar unik.
+- **`grad = layer.grads[name]`**, mengambil gradien yang sudah dihitung `backward` untuk parameter ini.
+- **`if self.weight_decay and name == "W"`**, penalti L2 `weight_decay · theta` hanya ditambahkan bila parameter adalah bobot `W`; bias `b` sengaja dilewati (tak disusutkan).
+- **`v *= self.momentum`**, kecepatan lama diredam faktor `momentum` (mis. 0.9), mempertahankan sebagian arah langkah sebelumnya.
+- **`v -= self.lr * grad`**, menambahkan kontribusi gradien saat ini (bertanda negatif karena bergerak menuruni gradien); rumus lengkapnya `v = μv − η∇`.
+- **`layer.params[name] += v`**, parameter diperbarui in-place (`θ = θ + v`) agar referensi array di lapisan tetap sama, tidak membuat array baru.
+- **`zero_grad`** (tak ditampilkan), menyetel semua gradien ke nol sebelum backward berikutnya.
 
 ## A.13 Adam
 
 `Adam` menyimpan estimasi momen pertama (`m`, rata-rata gradien) dan momen kedua (`v`, rata-rata kuadrat gradien), menerapkan koreksi bias, lalu mengambil langkah adaptif per-parameter. Weight decay L2 hanya pada bobot `W`.
 
-> 💡 **Untuk awam:** Adam ibarat bola yang menuruni bukit menuju titik terendah (jawaban terbaik), tetapi bola ini punya ingatan: ia mengingat arah dan kecepatan geraknya barusan. Berkat ingatan itu ia tidak mudah goyah oleh tonjolan kecil di jalan dan tidak gampang nyangkut di cekungan dangkal, sehingga meluncur lebih mulus dan cepat ke tujuan.
+> **Untuk awam:** Adam ibarat bola yang menuruni bukit menuju titik terendah (jawaban terbaik), tetapi bola ini punya ingatan: ia mengingat arah dan kecepatan geraknya barusan. Berkat ingatan itu ia tidak mudah goyah oleh tonjolan kecil di jalan dan tidak gampang nyangkut di cekungan dangkal, sehingga meluncur lebih mulus dan cepat ke tujuan.
 
-:::pair Gambar A.13 — Langkah pembaruan Adam dengan koreksi bias (`src/cnn/optim.py`)
+:::pair Gambar A.13, Langkah pembaruan Adam dengan koreksi bias (`src/cnn/optim.py`)
 ```python
 class Adam:
     def __init__(self, layers, lr=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
@@ -1660,20 +1660,20 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`self.t = 0`** — penghitung langkah global; dinaikkan tiap `step` dan dipakai untuk koreksi bias.
-- **`self.m` / `self.v`** — dua kamus momen (pertama dan kedua) tiap parameter, diinisialisasi nol dan diindeks `(li, name)`.
-- **`self.t += 1`** lalu **`bc1 = 1.0 - b1 ** self.t`**, **`bc2 = 1.0 - b2 ** self.t`** — faktor koreksi bias; karena `m` dan `v` mulai dari nol, pada langkah awal ia bias ke nol, koreksi ini mengompensasinya (mendekati 1 saat `t` besar).
-- **`if self.weight_decay and name == "W"`** — sama seperti SGDM, penalti L2 hanya untuk bobot `W`.
-- **`m *= b1; m += (1.0 - b1) * grad`** — pembaruan rata-rata bergerak momen pertama: `m = b1·m + (1−b1)·g`.
-- **`v *= b2; v += (1.0 - b2) * (grad * grad)`** — momen kedua memakai kuadrat gradien `g^2` (elemen demi elemen): `v = b2·v + (1−b2)·g^2`.
-- **`m_hat = m / bc1`**, **`v_hat = v / bc2`** — versi terkoreksi-bias dari kedua momen.
-- **`layer.params[name] -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)`** — langkah adaptif: gradien terskala dibagi akar momen kedua, sehingga tiap parameter memperoleh laju efektif sendiri; `eps` (1e-8) mencegah pembagian nol. Pembaruan in-place (`-=`).
+- **`self.t = 0`**, penghitung langkah global; dinaikkan tiap `step` dan dipakai untuk koreksi bias.
+- **`self.m` / `self.v`**, dua kamus momen (pertama dan kedua) tiap parameter, diinisialisasi nol dan diindeks `(li, name)`.
+- **`self.t += 1`** lalu **`bc1 = 1.0 - b1 ** self.t`**, **`bc2 = 1.0 - b2 ** self.t`**, faktor koreksi bias; karena `m` dan `v` mulai dari nol, pada langkah awal ia bias ke nol, koreksi ini mengompensasinya (mendekati 1 saat `t` besar).
+- **`if self.weight_decay and name == "W"`**, sama seperti SGDM, penalti L2 hanya untuk bobot `W`.
+- **`m *= b1; m += (1.0 - b1) * grad`**, pembaruan rata-rata bergerak momen pertama: `m = b1·m + (1−b1)·g`.
+- **`v *= b2; v += (1.0 - b2) * (grad * grad)`**, momen kedua memakai kuadrat gradien `g^2` (elemen demi elemen): `v = b2·v + (1−b2)·g^2`.
+- **`m_hat = m / bc1`**, **`v_hat = v / bc2`**, versi terkoreksi-bias dari kedua momen.
+- **`layer.params[name] -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)`**, langkah adaptif: gradien terskala dibagi akar momen kedua, sehingga tiap parameter memperoleh laju efektif sendiri; `eps` (1e-8) mencegah pembagian nol. Pembaruan in-place (`-=`).
 
 ## A.14 Training loop mini-batch
 
 `Trainer.fit` menjalankan satu putaran epoch: tiap epoch mengatur laju belajar (cosine), melewatkan seluruh mini-batch (opsional diaugmentasi daring), lalu mengevaluasi train/val dan menyimpan snapshot bobot dengan `val_acc` terbaik untuk dipulihkan di akhir.
 
-:::pair Gambar A.14 — Loop pelatihan mini-batch dengan cosine LR dan restore bobot val terbaik (`src/cnn/trainer.py`)
+:::pair Gambar A.14, Loop pelatihan mini-batch dengan cosine LR dan restore bobot val terbaik (`src/cnn/trainer.py`)
 ```python
 def fit(self, x_train, y_train, x_val=None, y_val=None, epochs=15,
         verbose=True, restore_best=True):
@@ -1719,21 +1719,21 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`best_val_acc, best_snapshot, best_epoch = -1.0, None, 0`** — inisialisasi pelacak model terbaik; `best_val_acc = -1.0` memastikan epoch pertama pasti mengalahkannya.
-- **`for epoch in range(1, epochs + 1)`** — satu iterasi = satu kali lewat seluruh data latih.
-- **`self.optimizer.lr = 0.5 * self.base_lr * (1.0 + np.cos(...))`** — jadwal *cosine annealing*: laju belajar meluruh mulus dari `base_lr` menuju ~0 sepanjang pelatihan, menstabilkan epoch akhir dan meredam *bouncing* akurasi validasi. `max(1, epochs - 1)` mencegah pembagian nol saat `epochs == 1`.
-- **`self.model.train()`** — mengaktifkan mode latih (dropout hidup); pasangannya `self.model.eval()` di `_evaluate` mematikan dropout saat pengukuran.
-- **`for xb, yb in self._iterate_minibatches(...)`** — generator yang mengacak indeks (`self.rng.shuffle`) lalu memotong data menjadi potongan sebesar `batch_size`.
-- **`if self.augment: xb = random_augment(xb, self.rng, **self.aug_params)`** — augmentasi *daring*: batch diacak ulang tiap epoch sehingga model nyaris tak pernah melihat citra identik dua kali (lihat A.15).
-- **`scores = ...; loss = ...; dscores = ...; self.model.backward(dscores); self.optimizer.step()`** — empat langkah inti: forward → hitung loss → backprop gradien loss → perbarui parameter (SGD+momentum atau Adam).
-- **`if val_acc > best_val_acc:`** — kriteria *early-stopping* implisit berbasis validasi; saat lebih baik, `_snapshot()` menyalin dalam (deep copy) seluruh parameter tiap lapisan.
-- **`if restore_best and best_snapshot is not None: self._restore(best_snapshot)`** — di akhir pelatihan, bobot dikembalikan ke epoch dengan `val_acc` tertinggi, bukan bobot epoch terakhir yang mungkin sudah *overfit*.
+- **`best_val_acc, best_snapshot, best_epoch = -1.0, None, 0`**, inisialisasi pelacak model terbaik; `best_val_acc = -1.0` memastikan epoch pertama pasti mengalahkannya.
+- **`for epoch in range(1, epochs + 1)`**, satu iterasi = satu kali lewat seluruh data latih.
+- **`self.optimizer.lr = 0.5 * self.base_lr * (1.0 + np.cos(...))`**, jadwal *cosine annealing*: laju belajar meluruh mulus dari `base_lr` menuju ~0 sepanjang pelatihan, menstabilkan epoch akhir dan meredam *bouncing* akurasi validasi. `max(1, epochs - 1)` mencegah pembagian nol saat `epochs == 1`.
+- **`self.model.train()`**, mengaktifkan mode latih (dropout hidup); pasangannya `self.model.eval()` di `_evaluate` mematikan dropout saat pengukuran.
+- **`for xb, yb in self._iterate_minibatches(...)`**, generator yang mengacak indeks (`self.rng.shuffle`) lalu memotong data menjadi potongan sebesar `batch_size`.
+- **`if self.augment: xb = random_augment(xb, self.rng, **self.aug_params)`**, augmentasi *daring*: batch diacak ulang tiap epoch sehingga model nyaris tak pernah melihat citra identik dua kali (lihat A.15).
+- **`scores = ...; loss = ...; dscores = ...; self.model.backward(dscores); self.optimizer.step()`**, empat langkah inti: forward → hitung loss → backprop gradien loss → perbarui parameter (SGD+momentum atau Adam).
+- **`if val_acc > best_val_acc:`**, kriteria *early-stopping* implisit berbasis validasi; saat lebih baik, `_snapshot()` menyalin dalam (deep copy) seluruh parameter tiap lapisan.
+- **`if restore_best and best_snapshot is not None: self._restore(best_snapshot)`**, di akhir pelatihan, bobot dikembalikan ke epoch dengan `val_acc` tertinggi, bukan bobot epoch terakhir yang mungkin sudah *overfit*.
 
 ## A.15 Augmentasi daring
 
 `random_augment` menghasilkan salinan batch yang diacak per-citra tiap kali dipanggil: flip horizontal, geser integer dengan replikasi tepi, lalu transformasi fotometrik (kontras, kecerahan, noise). Karena dipanggil ulang tiap epoch, ragam data efektif tumbuh besar tanpa menambah memori.
 
-:::pair Gambar A.15 — Augmentasi acak per-citra pada batch terstandardisasi (`src/cnn/augment.py`)
+:::pair Gambar A.15, Augmentasi acak per-citra pada batch terstandardisasi (`src/cnn/augment.py`)
 ```python
 def random_augment(x, rng, max_shift=3, brightness=0.15, contrast=0.15,
                    noise_std=0.05, flip_p=0.5):
@@ -1771,21 +1771,21 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`out = x.copy()`** — bekerja pada salinan agar tensor latih asli tak termodifikasi; batch berikutnya tetap bersih.
-- **`for i in range(n):`** — tiap citra diaugmentasi *independen*, jadi satu batch memuat campuran transformasi berbeda.
-- **`if rng.random() < flip_p: img = img[:, :, ::-1]`** — flip horizontal berpeluang `flip_p` (default 0.5) dengan membalik sumbu lebar (`W`).
-- **`dy = int(rng.integers(-max_shift, max_shift + 1))`** — pergeseran integer acak; `+1` karena `integers` batas-atasnya eksklusif, sehingga `+max_shift` ikut terpilih.
-- **`img = _shift_replicate(np.ascontiguousarray(img), dy, dx)`** — geser via `np.roll` lalu tepi yang "terlipat" ditimpa nilai tepi (replikasi/clamp) agar tak muncul artefak nol; `ascontiguousarray` merapikan memori setelah slicing terbalik dari flip.
-- **`img = img * (1.0 + rng.uniform(-contrast, contrast))`** — kontras sebagai transformasi afin perkalian; sah dilakukan di ruang terstandardisasi.
-- **`img = img + rng.uniform(-brightness, brightness)`** — kecerahan sebagai pergeseran aditif konstan ke seluruh piksel.
-- **`img = img + rng.normal(0.0, noise_std, size=img.shape)`** — noise Gaussian per-piksel untuk menambah ketahanan terhadap derau sensor.
-- **`rng`** — instance `np.random.Generator` milik trainer, sehingga augmentasi tetap *reproducible* mengikuti seed.
+- **`out = x.copy()`**, bekerja pada salinan agar tensor latih asli tak termodifikasi; batch berikutnya tetap bersih.
+- **`for i in range(n):`**, tiap citra diaugmentasi *independen*, jadi satu batch memuat campuran transformasi berbeda.
+- **`if rng.random() < flip_p: img = img[:, :, ::-1]`**, flip horizontal berpeluang `flip_p` (default 0.5) dengan membalik sumbu lebar (`W`).
+- **`dy = int(rng.integers(-max_shift, max_shift + 1))`**, pergeseran integer acak; `+1` karena `integers` batas-atasnya eksklusif, sehingga `+max_shift` ikut terpilih.
+- **`img = _shift_replicate(np.ascontiguousarray(img), dy, dx)`**, geser via `np.roll` lalu tepi yang "terlipat" ditimpa nilai tepi (replikasi/clamp) agar tak muncul artefak nol; `ascontiguousarray` merapikan memori setelah slicing terbalik dari flip.
+- **`img = img * (1.0 + rng.uniform(-contrast, contrast))`**, kontras sebagai transformasi afin perkalian; sah dilakukan di ruang terstandardisasi.
+- **`img = img + rng.uniform(-brightness, brightness)`**, kecerahan sebagai pergeseran aditif konstan ke seluruh piksel.
+- **`img = img + rng.normal(0.0, noise_std, size=img.shape)`**, noise Gaussian per-piksel untuk menambah ketahanan terhadap derau sensor.
+- **`rng`**, instance `np.random.Generator` milik trainer, sehingga augmentasi tetap *reproducible* mengikuti seed.
 
 ## A.16 Preprocessing dan split
 
-`load_image` membuka citra, me-resize ke `IMG_SIZE`, dan mengembalikan tensor `(C, H, W)` dalam `[0,1]` — RGB (`transpose`) atau grayscale luminance sesuai `config.IMG_CHANNELS`. Di `main`, data dibagi *stratified* 70/15/15 lalu distandardisasi dengan statistik data latih.
+`load_image` membuka citra, me-resize ke `IMG_SIZE`, dan mengembalikan tensor `(C, H, W)` dalam `[0,1]`, RGB (`transpose`) atau grayscale luminance sesuai `config.IMG_CHANNELS`. Di `main`, data dibagi *stratified* 70/15/15 lalu distandardisasi dengan statistik data latih.
 
-:::pair Gambar A.16 — Muat citra RGB (C,H,W), split stratified, standardisasi skalar (`src/preprocess.py`)
+:::pair Gambar A.16, Muat citra RGB (C,H,W), split stratified, standardisasi skalar (`src/preprocess.py`)
 ```python
 def load_image(path):
     with Image.open(path) as im:
@@ -1827,21 +1827,21 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`im.convert("RGB").resize((config.IMG_SIZE, config.IMG_SIZE), Image.BILINEAR)`** — samakan semua citra ke ukuran masukan LeNet-5 memakai interpolasi bilinear; `convert("RGB")` menyeragamkan mode (mis. RGBA/grayscale) menjadi 3 kanal.
-- **`arr = np.asarray(im, dtype=np.float64)`** — tensor `(H, W, 3)` rentang 0..255 dalam presisi ganda.
-- **`if config.IMG_CHANNELS == 1: ... gray[np.newaxis, :, :]`** — jalur grayscale: luminance BT.601 dinormalisasi ke `[0,1]`, lalu tambahkan sumbu kanal menjadi `(1, H, W)`.
-- **`rgb = arr / 255.0; return np.transpose(rgb, (2, 0, 1))`** — jalur RGB (default): skalakan ke `[0,1]` lalu ubah tata sumbu dari `(H, W, C)` ke `(C, H, W)` sesuai konvensi tensor konvolusi. RGB menyimpan sinyal warna/tekstur aspal yang membantu membedakan lubang dari jalan utuh.
-- **`train_test_split(..., test_size=config.TEST_RATIO, stratify=y, ...)`** — pisahkan test lebih dulu; `stratify=y` menjaga proporsi kelas identik di tiap subset.
-- **`val_frac = config.VAL_RATIO / (config.TRAIN_RATIO + config.VAL_RATIO)`** — konversi rasio val terhadap *sisa* (train+val) setelah test dilepas, agar hasil akhir tepat 70/15/15.
-- **`random_state=config.SEED`** — split deterministik supaya eksperimen bisa direproduksi.
-- **`mu = float(x_train.mean()); sigma = float(x_train.std() + 1e-8)`** — standardisasi *skalar* (satu `mu`, satu `sigma` untuk seluruh tensor), dihitung **hanya** dari data latih agar tak ada kebocoran informasi. `1e-8` mencegah pembagian nol.
-- **`x_train = (x_train - mu) / sigma; x_val = ...; x_test = ...`** — statistik latih yang sama diterapkan ke val dan test; `mu`/`sigma` disimpan ke `norm_stats.json` untuk dipakai saat inferensi.
+- **`im.convert("RGB").resize((config.IMG_SIZE, config.IMG_SIZE), Image.BILINEAR)`**, samakan semua citra ke ukuran masukan LeNet-5 memakai interpolasi bilinear; `convert("RGB")` menyeragamkan mode (mis. RGBA/grayscale) menjadi 3 kanal.
+- **`arr = np.asarray(im, dtype=np.float64)`**, tensor `(H, W, 3)` rentang 0..255 dalam presisi ganda.
+- **`if config.IMG_CHANNELS == 1: ... gray[np.newaxis, :, :]`**, jalur grayscale: luminance BT.601 dinormalisasi ke `[0,1]`, lalu tambahkan sumbu kanal menjadi `(1, H, W)`.
+- **`rgb = arr / 255.0; return np.transpose(rgb, (2, 0, 1))`**, jalur RGB (default): skalakan ke `[0,1]` lalu ubah tata sumbu dari `(H, W, C)` ke `(C, H, W)` sesuai konvensi tensor konvolusi. RGB menyimpan sinyal warna/tekstur aspal yang membantu membedakan lubang dari jalan utuh.
+- **`train_test_split(..., test_size=config.TEST_RATIO, stratify=y, ...)`**, pisahkan test lebih dulu; `stratify=y` menjaga proporsi kelas identik di tiap subset.
+- **`val_frac = config.VAL_RATIO / (config.TRAIN_RATIO + config.VAL_RATIO)`**, konversi rasio val terhadap *sisa* (train+val) setelah test dilepas, agar hasil akhir tepat 70/15/15.
+- **`random_state=config.SEED`**, split deterministik supaya eksperimen bisa direproduksi.
+- **`mu = float(x_train.mean()); sigma = float(x_train.std() + 1e-8)`**, standardisasi *skalar* (satu `mu`, satu `sigma` untuk seluruh tensor), dihitung **hanya** dari data latih agar tak ada kebocoran informasi. `1e-8` mencegah pembagian nol.
+- **`x_train = (x_train - mu) / sigma; x_val = ...; x_test = ...`**, statistik latih yang sama diterapkan ke val dan test; `mu`/`sigma` disimpan ke `norm_stats.json` untuk dipakai saat inferensi.
 
 ## A.17 Ensembel dan TTA
 
 `ensemble_proba` merata-ratakan probabilitas softmax dari beberapa model (satu per seed) di mana tiap model memakai *test-time augmentation*: `tta_proba` merata-ratakan prediksi citra asli dan versi flip. Dua lapis perata-rataan ini meredam varians dan menaikkan akurasi.
 
-:::pair Gambar A.17 — Ensembel multi-seed dengan TTA flip pada softmax (`src/evaluate.py`)
+:::pair Gambar A.17, Ensembel multi-seed dengan TTA flip pada softmax (`src/evaluate.py`)
 ```python
 def tta_proba(model, x, batch_size=64):
     p = model.predict_proba(x, batch_size)
@@ -1880,107 +1880,107 @@ flowchart TB
 
 **Penjelasan baris demi baris:**
 
-- **`p = model.predict_proba(x, batch_size)`** — softmax model pada citra asli.
-- **`p_flip = model.predict_proba(x[:, :, :, ::-1], batch_size)`** — softmax pada citra yang dicermin kiri-kanan (balik sumbu `W`).
-- **`return 0.5 * (p + p_flip)`** — prediksi lubang seharusnya *invarian* terhadap cermin, jadi rata-rata keduanya meredam derau dan biasanya menaikkan akurasi sedikit.
-- **`for seed in getattr(config, "ENSEMBLE_SEEDS", []):`** — telusuri daftar seed; `getattr` dengan default `[]` aman bila konfigurasi tak mendefinisikannya.
-- **`p = config.WEIGHTS_NPZ.replace(".npz", f"_seed{seed}.npz")`** — bentuk nama berkas bobot per-seed (mis. `weights_seed7.npz`).
-- **`return paths or [config.WEIGHTS_NPZ]`** — jika tak ada bobot ensembel di disk, jatuh kembali ke satu bobot tunggal, sehingga alur evaluasi tetap jalan.
-- **`model = _new_model().load(p)`** — bangun ulang arsitektur LeNet5 sesuai `IMG_CHANNELS`/`IMG_SIZE` aktif lalu muat parameter tersimpan.
-- **`acc = pr if acc is None else acc + pr`** — akumulasi berjalan; inisialisasi pada iterasi pertama, lalu jumlahkan probabilitas TTA tiap model.
-- **`return acc / len(paths)`** — bagi dengan jumlah model untuk memperoleh rata-rata softmax ensembel; `np.argmax` atasnya (di `main`) menghasilkan label akhir.
+- **`p = model.predict_proba(x, batch_size)`**, softmax model pada citra asli.
+- **`p_flip = model.predict_proba(x[:, :, :, ::-1], batch_size)`**, softmax pada citra yang dicermin kiri-kanan (balik sumbu `W`).
+- **`return 0.5 * (p + p_flip)`**, prediksi lubang seharusnya *invarian* terhadap cermin, jadi rata-rata keduanya meredam derau dan biasanya menaikkan akurasi sedikit.
+- **`for seed in getattr(config, "ENSEMBLE_SEEDS", []):`**, telusuri daftar seed; `getattr` dengan default `[]` aman bila konfigurasi tak mendefinisikannya.
+- **`p = config.WEIGHTS_NPZ.replace(".npz", f"_seed{seed}.npz")`**, bentuk nama berkas bobot per-seed (mis. `weights_seed7.npz`).
+- **`return paths or [config.WEIGHTS_NPZ]`**, jika tak ada bobot ensembel di disk, jatuh kembali ke satu bobot tunggal, sehingga alur evaluasi tetap jalan.
+- **`model = _new_model().load(p)`**, bangun ulang arsitektur LeNet5 sesuai `IMG_CHANNELS`/`IMG_SIZE` aktif lalu muat parameter tersimpan.
+- **`acc = pr if acc is None else acc + pr`**, akumulasi berjalan; inisialisasi pada iterasi pertama, lalu jumlahkan probabilitas TTA tiap model.
+- **`return acc / len(paths)`**, bagi dengan jumlah model untuk memperoleh rata-rata softmax ensembel; `np.argmax` atasnya (di `main`) menghasilkan label akhir.
 
 
 ---
 
-# LAMPIRAN B — KAMUS ISTILAH
+# LAMPIRAN B, KAMUS ISTILAH
 
-> 💡 **Untuk pembaca awam:** kamus ini menerjemahkan istilah teknis ke bahasa
+> **Untuk pembaca awam:** kamus ini menerjemahkan istilah teknis ke bahasa
 > sehari-hari. Setiap entri berisi satu kalimat definisi ditambah satu analogi.
-> Anda tidak perlu membaca berurutan — pakai saja sebagai rujukan saat menemui
+> Anda tidak perlu membaca berurutan, pakai saja sebagai rujukan saat menemui
 > istilah asing di dokumen lain atau di makalah.
 
-**Tensor** — wadah angka berdimensi banyak yang menyimpan gambar atau hasil hitungan; seperti tumpukan lembar spreadsheet: satu angka (nilai), satu baris (deret), satu tabel (lembar), lalu banyak tabel ditumpuk.
+**Tensor:** wadah angka berdimensi banyak yang menyimpan gambar atau hasil hitungan; seperti tumpukan lembar spreadsheet: satu angka (nilai), satu baris (deret), satu tabel (lembar), lalu banyak tabel ditumpuk.
 
-**Matriks** — tabel angka dua dimensi (baris × kolom); persis seperti papan catur yang tiap kotaknya diisi satu angka.
+**Matriks:** tabel angka dua dimensi (baris × kolom); persis seperti papan catur yang tiap kotaknya diisi satu angka.
 
-**Vektor** — deretan angka satu baris; ibarat daftar belanja bernomor, tiap posisi punya makna tetap.
+**Vektor:** deretan angka satu baris; ibarat daftar belanja bernomor, tiap posisi punya makna tetap.
 
-**Batch / mini-batch** — sekelompok kecil gambar yang diproses bersamaan dalam satu langkah belajar; seperti guru memeriksa 32 lembar ujian sekaligus, bukan satu-satu atau seluruh kelas sekaligus.
+**Batch / mini-batch:** sekelompok kecil gambar yang diproses bersamaan dalam satu langkah belajar; seperti guru memeriksa 32 lembar ujian sekaligus, bukan satu-satu atau seluruh kelas sekaligus.
 
-**Epoch** — satu putaran penuh saat model sudah melihat semua gambar latih tepat satu kali; ibarat membaca ulang seluruh buku dari halaman pertama sampai terakhir sekali jalan.
+**Epoch:** satu putaran penuh saat model sudah melihat semua gambar latih tepat satu kali; ibarat membaca ulang seluruh buku dari halaman pertama sampai terakhir sekali jalan.
 
-**Reshape** — menyusun ulang angka yang sama ke bentuk berbeda tanpa mengubah isinya; seperti menata 12 telur dari satu baris panjang menjadi kotak 3×4 — telurnya tetap 12.
+**Reshape:** menyusun ulang angka yang sama ke bentuk berbeda tanpa mengubah isinya; seperti menata 12 telur dari satu baris panjang menjadi kotak 3×4, telurnya tetap 12.
 
-**Transpos** — menukar baris jadi kolom pada sebuah tabel; seperti memutar tabel jadwal 90 derajat sehingga judul yang tadinya di atas kini di samping.
+**Transpos:** menukar baris jadi kolom pada sebuah tabel; seperti memutar tabel jadwal 90 derajat sehingga judul yang tadinya di atas kini di samping.
 
-**Broadcasting** — trik agar angka kecil bisa "diregangkan" otomatis untuk berpasangan dengan tabel besar; seperti satu resep bumbu yang diterapkan ke semua porsi masakan tanpa menulis ulang resepnya.
+**Broadcasting:** trik agar angka kecil bisa "diregangkan" otomatis untuk berpasangan dengan tabel besar; seperti satu resep bumbu yang diterapkan ke semua porsi masakan tanpa menulis ulang resepnya.
 
-**Fancy indexing** — mengambil banyak elemen sekaligus dengan menyebut daftar posisinya; seperti berkata "ambilkan kursi nomor 3, 7, dan 10" alih-alih menunjuk satu per satu.
+**Fancy indexing:** mengambil banyak elemen sekaligus dengan menyebut daftar posisinya; seperti berkata "ambilkan kursi nomor 3, 7, dan 10" alih-alih menunjuk satu per satu.
 
-**In-place** — mengubah isi wadah angka langsung di tempat tanpa membuat salinan baru; seperti mengedit dokumen asli, bukan menyimpannya sebagai file baru dulu.
+**In-place:** mengubah isi wadah angka langsung di tempat tanpa membuat salinan baru; seperti mengedit dokumen asli, bukan menyimpannya sebagai file baru dulu.
 
-**Mask** — daftar benar/salah yang menandai elemen mana yang dipakai dan mana yang diabaikan; seperti stabilo yang menyorot kata-kata penting dan membiarkan sisanya.
+**Mask:** daftar benar/salah yang menandai elemen mana yang dipakai dan mana yang diabaikan; seperti stabilo yang menyorot kata-kata penting dan membiarkan sisanya.
 
-**Argmax** — mencari posisi angka terbesar dalam sebuah deret; seperti menunjuk siswa dengan nilai tertinggi di daftar, bukan menyebut nilainya.
+**Argmax:** mencari posisi angka terbesar dalam sebuah deret; seperti menunjuk siswa dengan nilai tertinggi di daftar, bukan menyebut nilainya.
 
-**Gradien** — penunjuk arah dan seberapa besar suatu nilai harus diubah agar hasil membaik; seperti kompas yang menunjukkan ke mana harus melangkah supaya lebih cepat sampai puncak.
+**Gradien:** penunjuk arah dan seberapa besar suatu nilai harus diubah agar hasil membaik; seperti kompas yang menunjukkan ke mana harus melangkah supaya lebih cepat sampai puncak.
 
-**Backpropagation** — cara menelusuri kesalahan dari hasil akhir mundur ke setiap bagian model untuk tahu siapa yang perlu diperbaiki; seperti menelusuri balik resep gagal untuk menemukan bumbu mana yang salah takar.
+**Backpropagation:** cara menelusuri kesalahan dari hasil akhir mundur ke setiap bagian model untuk tahu siapa yang perlu diperbaiki; seperti menelusuri balik resep gagal untuk menemukan bumbu mana yang salah takar.
 
-**Forward & backward** — dua arah proses: maju (forward) menghasilkan tebakan, mundur (backward) menghitung kesalahan dan cara memperbaikinya; seperti mengerjakan soal lalu mencocokkan dengan kunci untuk tahu di mana keliru.
+**Forward & backward:** dua arah proses: maju (forward) menghasilkan tebakan, mundur (backward) menghitung kesalahan dan cara memperbaikinya; seperti mengerjakan soal lalu mencocokkan dengan kunci untuk tahu di mana keliru.
 
-**Softmax** — mengubah sekumpulan skor mentah menjadi persentase keyakinan yang totalnya 100%; seperti mengubah perolehan suara jadi persentase pemilih tiap kandidat.
+**Softmax:** mengubah sekumpulan skor mentah menjadi persentase keyakinan yang totalnya 100%; seperti mengubah perolehan suara jadi persentase pemilih tiap kandidat.
 
-**Cross-entropy** — ukuran seberapa jauh tebakan model meleset dari jawaban benar; makin yakin tapi salah, makin besar hukumannya — seperti denda yang membengkak kalau kita menjawab "pasti benar" padahal salah.
+**Cross-entropy:** ukuran seberapa jauh tebakan model meleset dari jawaban benar; makin yakin tapi salah, makin besar hukumannya, seperti denda yang membengkak kalau kita menjawab "pasti benar" padahal salah.
 
-**One-hot** — cara menulis jawaban kategori sebagai deret 0 dengan satu angka 1 di posisi yang benar; seperti kartu absensi yang hanya satu kotak dicentang untuk menandai kelas yang dihadiri.
+**One-hot:** cara menulis jawaban kategori sebagai deret 0 dengan satu angka 1 di posisi yang benar; seperti kartu absensi yang hanya satu kotak dicentang untuk menandai kelas yang dihadiri.
 
-**Momentum** — teknik agar perbaikan model tidak berhenti-henti melainkan mempertahankan arah seperti benda yang sudah melaju; seperti bola menggelinding menuruni bukit yang tetap meluncur melewati lubang-lubang kecil.
+**Momentum:** teknik agar perbaikan model tidak berhenti-henti melainkan mempertahankan arah seperti benda yang sudah melaju; seperti bola menggelinding menuruni bukit yang tetap meluncur melewati lubang-lubang kecil.
 
-**Varians** — ukuran seberapa berpencar-pencar hasil dari nilai rata-ratanya; seperti tembakan panah yang tersebar jauh dari titik pusat menunjukkan varians tinggi.
+**Varians:** ukuran seberapa berpencar-pencar hasil dari nilai rata-ratanya; seperti tembakan panah yang tersebar jauh dari titik pusat menunjukkan varians tinggi.
 
-**Overfitting** — kondisi saat model terlalu hafal contoh latihan sampai gagal pada soal baru; seperti murid yang menghafal kunci jawaban ujian lama tapi bingung menghadapi soal yang sedikit diubah.
+**Overfitting:** kondisi saat model terlalu hafal contoh latihan sampai gagal pada soal baru; seperti murid yang menghafal kunci jawaban ujian lama tapi bingung menghadapi soal yang sedikit diubah.
 
-**Regularisasi** — sekumpulan cara menahan model agar tidak terlalu hafal, mencakup *dropout* (mematikan sebagian bagian secara acak saat berlatih) dan *weight decay* (menghukum angka-angka yang membesar berlebihan); seperti melatih tim dengan pemain bergantian diistirahatkan dan melarang satu bintang mendominasi.
+**Regularisasi:** sekumpulan cara menahan model agar tidak terlalu hafal, mencakup *dropout* (mematikan sebagian bagian secara acak saat berlatih) dan *weight decay* (menghukum angka-angka yang membesar berlebihan); seperti melatih tim dengan pemain bergantian diistirahatkan dan melarang satu bintang mendominasi.
 
-**Kernel / filter** — jendela kecil berisi angka yang digeser ke seluruh gambar untuk mendeteksi pola tertentu; seperti stempel bermotif yang dicap ke tiap bagian gambar untuk menemukan garis atau tepi.
+**Kernel / filter:** jendela kecil berisi angka yang digeser ke seluruh gambar untuk mendeteksi pola tertentu; seperti stempel bermotif yang dicap ke tiap bagian gambar untuk menemukan garis atau tepi.
 
-**Stride** — seberapa jauh jendela filter melompat setiap kali digeser; seperti langkah kaki — langkah lebar (stride besar) memindai lebih cepat tapi lebih kasar.
+**Stride:** seberapa jauh jendela filter melompat setiap kali digeser; seperti langkah kaki, langkah lebar (stride besar) memindai lebih cepat tapi lebih kasar.
 
-**Padding** — pinggiran angka nol yang ditambahkan mengelilingi gambar agar tepinya tetap terbaca; seperti bingkai kosong di sekeliling foto supaya sudut-sudutnya tidak terpotong saat dicap filter.
+**Padding:** pinggiran angka nol yang ditambahkan mengelilingi gambar agar tepinya tetap terbaca; seperti bingkai kosong di sekeliling foto supaya sudut-sudutnya tidak terpotong saat dicap filter.
 
-**Feature map** — gambar hasil setelah sebuah filter dijalankan, menyorot di mana pola yang dicari muncul; seperti peta panas yang menyala di lokasi-lokasi yang cocok dengan motif stempel.
+**Feature map:** gambar hasil setelah sebuah filter dijalankan, menyorot di mana pola yang dicari muncul; seperti peta panas yang menyala di lokasi-lokasi yang cocok dengan motif stempel.
 
-**Konvolusi** — proses menggeser filter ke seluruh gambar sambil menghitung kecocokan di tiap posisi; seperti menyorotkan senter bermotif ke seluruh dinding untuk melihat bagian mana yang berpola sama.
+**Konvolusi:** proses menggeser filter ke seluruh gambar sambil menghitung kecocokan di tiap posisi; seperti menyorotkan senter bermotif ke seluruh dinding untuk melihat bagian mana yang berpola sama.
 
-**Normalisasi / standardisasi** — menyetel ulang angka agar berada pada skala setara, biasanya berpusat di rata-rata 0 dengan sebaran seragam; seperti menyamakan satuan agar tinggi badan dan berat badan bisa dibandingkan adil.
+**Normalisasi / standardisasi:** menyetel ulang angka agar berada pada skala setara, biasanya berpusat di rata-rata 0 dengan sebaran seragam; seperti menyamakan satuan agar tinggi badan dan berat badan bisa dibandingkan adil.
 
-**Ensembel** — menggabungkan tebakan beberapa model lalu mengambil kesepakatannya untuk hasil lebih stabil; seperti panel juri — rata-rata banyak juri lebih tepercaya daripada satu juri saja.
+**Ensembel:** menggabungkan tebakan beberapa model lalu mengambil kesepakatannya untuk hasil lebih stabil; seperti panel juri, rata-rata banyak juri lebih tepercaya daripada satu juri saja.
 
-**TTA (*Test-Time Augmentation*)** — memberi model beberapa versi gambar yang sama (dibalik, digeser) saat pengujian lalu merata-ratakan hasilnya; seperti melihat objek dari beberapa sudut sebelum memutuskan itu apa.
+**TTA (*Test-Time Augmentation*)**, memberi model beberapa versi gambar yang sama (dibalik, digeser) saat pengujian lalu merata-ratakan hasilnya; seperti melihat objek dari beberapa sudut sebelum memutuskan itu apa.
 
-**Notasi ilmiah** — cara ringkas menulis angka sangat besar atau sangat kecil, misalnya `1e-8` berarti 0,00000001; seperti singkatan "8 nol di belakang koma" supaya tak perlu menulis deretan nol yang panjang.
+**Notasi ilmiah:** cara ringkas menulis angka sangat besar atau sangat kecil, misalnya `1e-8` berarti 0,00000001; seperti singkatan "8 nol di belakang koma" supaya tak perlu menulis deretan nol yang panjang.
 
 ## Simbol matematika
 
-**Σ (sigma)** — perintah "jumlahkan semuanya"; seperti tombol total di kalkulator yang menambahkan seluruh angka dalam daftar.
+**Σ (sigma):** perintah "jumlahkan semuanya"; seperti tombol total di kalkulator yang menambahkan seluruh angka dalam daftar.
 
-**∂L/∂x** — seberapa besar hasil akhir (L) berubah bila x digeser sedikit, sekaligus arah perbaikannya; seperti mengukur berapa banyak rasa sup berubah kalau garam ditambah sejumput.
+**∂L/∂x:** seberapa besar hasil akhir (L) berubah bila x digeser sedikit, sekaligus arah perbaikannya; seperti mengukur berapa banyak rasa sup berubah kalau garam ditambah sejumput.
 
-**∇ dan δ (nabla & delta)** — gradien, yaitu sinyal koreksi yang mengalir mundur ke tiap bagian model; seperti umpan balik dari pelanggan yang diteruskan mundur ke setiap bagian produksi untuk diperbaiki.
+**∇ dan δ (nabla & delta):** gradien, yaitu sinyal koreksi yang mengalir mundur ke tiap bagian model; seperti umpan balik dari pelanggan yang diteruskan mundur ke setiap bagian produksi untuk diperbaiki.
 
-**ᵀ (transpos)** — tanda kecil yang berarti "tukar baris jadi kolom" pada sebuah tabel; seperti memutar tabel 90 derajat.
+**ᵀ (transpos):** tanda kecil yang berarti "tukar baris jadi kolom" pada sebuah tabel; seperti memutar tabel 90 derajat.
 
-**𝒩 (skrip N)** — angka acak yang diambil dari sebaran berbentuk lonceng, banyak di tengah dan jarang di tepi; seperti tinggi badan orang: kebanyakan sedang, sedikit yang sangat pendek atau sangat tinggi.
+**𝒩 (skrip N):** angka acak yang diambil dari sebaran berbentuk lonceng, banyak di tengah dan jarang di tepi; seperti tinggi badan orang: kebanyakan sedang, sedikit yang sangat pendek atau sangat tinggi.
 
-**e (bilangan Euler)** — bilangan tetap ≈2,718 yang jadi dasar hitungan pertumbuhan dan eksponen; seperti angka istimewa alam, mirip peran π pada lingkaran.
+**e (bilangan Euler):** bilangan tetap ≈2,718 yang jadi dasar hitungan pertumbuhan dan eksponen; seperti angka istimewa alam, mirip peran π pada lingkaran.
 
-**μ (mu)** — rata-rata sekumpulan angka; seperti nilai tengah rapor yang mewakili keseluruhan.
+**μ (mu):** rata-rata sekumpulan angka; seperti nilai tengah rapor yang mewakili keseluruhan.
 
-**σ (sigma kecil)** — simpangan baku, ukuran seberapa lebar angka menyebar dari rata-ratanya; seperti mengukur apakah nilai satu kelas rapat mengumpul atau berpencar jauh.
+**σ (sigma kecil):** simpangan baku, ukuran seberapa lebar angka menyebar dari rata-ratanya; seperti mengukur apakah nilai satu kelas rapat mengumpul atau berpencar jauh.
 
-**ε (epsilon)** — angka super kecil yang ditambahkan sebagai penjaga agar tak terjadi pembagian dengan nol; seperti ganjalan tipis supaya mesin hitung tidak macet.
+**ε (epsilon):** angka super kecil yang ditambahkan sebagai penjaga agar tak terjadi pembagian dengan nol; seperti ganjalan tipis supaya mesin hitung tidak macet.
 
 ---
 
@@ -2007,12 +2007,12 @@ arXiv:2209.08538, 2022.
 [6] D. Arya, et al. *RDD2020: An annotated image dataset for automatic road damage
 detection using deep learning.* Data in Brief / Scientific Data, 2021.
 
-[7] R. Munir. *Bahan Kuliah IF4073 Pemrosesan Citra Digital: "21 — Convolutional
+[7] R. Munir. *Bahan Kuliah IF4073 Pemrosesan Citra Digital: "21, Convolutional
 Neural Network".* Program Studi Teknik Informatika, Institut Teknologi Bandung,
 2024.
 
 [8] Y. LeCun, L. Bottou, Y. Bengio, P. Haffner. *Gradient-based learning applied
-to document recognition.* Proceedings of the IEEE, 86(11):2278–2324, 1998.
+to document recognition.* Proceedings of the IEEE, 86(11):2278-2324, 1998.
 
 ---
 

@@ -1,4 +1,4 @@
-# 04 — Training Loop (Satu Iterasi Pelatihan)
+# 04, Training Loop (Satu Iterasi Pelatihan)
 
 Pelatihan mengulang empat langkah untuk tiap mini-batch: forward → loss →
 backward → update. Diagram berikut menunjukkan interaksi antar komponen.
