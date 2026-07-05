@@ -97,7 +97,7 @@ classDiagram
 ## Alur data antar objek
 
 ```mermaid
-flowchart LR
+flowchart TB
     DS["dataset.npz"] --> TR["Trainer.fit"]
     TR --> M["LeNet5"]
     M --> WT["weights.npz"]
