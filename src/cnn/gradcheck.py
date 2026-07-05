@@ -1,4 +1,4 @@
-"""Numerical gradient checking — bukti bahwa backward (turunan analitik) benar.
+"""Numerical gradient checking ,  bukti bahwa backward (turunan analitik) benar.
 
 Ide: untuk fungsi skalar L(theta), gradien numerik tiap elemen dihampiri dengan
 beda hingga terpusat (central difference):
@@ -132,7 +132,7 @@ def main():
     x_dense = rng.normal(size=(6, 5))
     all_results += check_layer("Dense", dense, x_dense, has_params=True)
 
-    # Dropout — mask dibekukan agar deterministik. Dengan mask tetap, dropout
+    # Dropout ,  mask dibekukan agar deterministik. Dengan mask tetap, dropout
     # adalah penskalaan elemen linear, sehingga gradien numerik & analitik cocok.
     drop = Dropout(0.5, seed=3)
     x_drop = rng.normal(size=(4, 5))
@@ -154,8 +154,8 @@ def main():
             ok = False
         print(f"{name:<22}{err:>18.2e}{status:>10}")
     print("=" * 52)
-    print("SEMUA LULUS — backprop terbukti benar." if ok
-          else "ADA YANG GAGAL — periksa implementasi backward.")
+    print("SEMUA LULUS ,  backprop terbukti benar." if ok
+          else "ADA YANG GAGAL ,  periksa implementasi backward.")
     return 0 if ok else 1
 
 

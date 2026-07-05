@@ -32,7 +32,7 @@ def sanity_overfit(x_train, y_train):
     """Latih pada 32 sampel saja; harus mencapai akurasi train tinggi."""
     print("\n[Sanity check] overfit batch kecil ...")
     idx = np.arange(min(32, len(y_train)))
-    # Tanpa regularisasi/augmentasi: ini murni uji kebenaran backprop —
+    # Tanpa regularisasi/augmentasi: ini murni uji kebenaran backprop , 
     # model HARUS mampu menghafal 32 sampel.
     m = LeNet5(seed=config.SEED, dropout_p=0.0,
                in_channels=config.IMG_CHANNELS, img_size=config.IMG_SIZE)

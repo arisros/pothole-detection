@@ -15,7 +15,7 @@ bukan seluruh repositori, agar hemat bandwidth. Hasil disusun ke:
 Catatan konteks: dataset ini bersifat umum (bukan khusus Indonesia). Untuk data
 khusus Indonesia (mis. Roboflow "Road Damage Indonesia" atau subset RDD2022
 Indonesia) diperlukan API key; pipeline ini dirancang agar mudah diganti
-sumbernya — cukup letakkan gambar pada data/raw/pothole dan data/raw/normal.
+sumbernya ,  cukup letakkan gambar pada data/raw/pothole dan data/raw/normal.
 """
 from __future__ import annotations
 

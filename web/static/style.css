@@ -296,6 +296,9 @@ footer .flinks { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0; font
   background: color-mix(in srgb, var(--blue) 7%, var(--card)); }
 .md blockquote.callout-math { border-left-color: var(--orange);
   background: color-mix(in srgb, var(--orange) 8%, var(--card)); }
+.md blockquote.callout .cp-ico { margin-right: 9px; }
+.md blockquote.callout-tip .cp-ico { color: var(--blue); }
+.md blockquote.callout-math .cp-ico { color: var(--orange); }
 .md .mermaid { background: #fff; border: 1px solid var(--line-2); border-radius: 10px;
   padding: 18px; margin: 22px 0; text-align: center; overflow-x: auto; }
 /* Perbesar diagram: isi lebar wadah (sebelumnya mengecil ke ukuran natural) */
