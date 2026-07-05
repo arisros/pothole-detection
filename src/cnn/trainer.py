@@ -1,4 +1,4 @@
-"""Training loop mini-batch — ditulis manual.
+"""Training loop mini-batch ,  ditulis manual.
 
 Satu epoch = satu kali lewat seluruh data latih. Untuk tiap mini-batch:
 

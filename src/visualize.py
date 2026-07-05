@@ -1,4 +1,4 @@
-"""Visualisasi *feature map* antar lapisan — memperlihatkan pergerakan data
+"""Visualisasi *feature map* antar lapisan ,  memperlihatkan pergerakan data
 melalui hidden layer CNN.
 
 Untuk satu citra contoh tiap kelas, dijalankan forward pass dan keluaran tiap
@@ -84,7 +84,7 @@ def main():
         stages = forward_capture(model, x)
         out_path = os.path.join(config.FIGURES_DIR, f"feature_maps_{name}.png")
         plot_feature_maps(x_test[idx], stages,
-                          f"Pergerakan hidden layer — kelas '{name}'", out_path)
+                          f"Pergerakan hidden layer ,  kelas '{name}'", out_path)
         print(f"  {out_path}")
     print("Selesai render feature map.")
     return 0

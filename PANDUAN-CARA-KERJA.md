@@ -1,8 +1,8 @@
-# Membangun CNN Deteksi Jalan Berlubang dari Nol — Panduan Step-by-Step
+# Membangun CNN Deteksi Jalan Berlubang dari Nol, Panduan Step-by-Step
 
 > Dokumen ini menjelaskan **arsitektur** dan **implementasi kode inti** sistem
 > klasifikasi citra jalan berlubang (pothole) vs normal menggunakan **CNN LeNet-5
-> yang seluruh matematikanya ditulis manual dengan NumPy** — tanpa PyTorch/TF/Keras,
+> yang seluruh matematikanya ditulis manual dengan NumPy**, tanpa PyTorch/TF/Keras,
 > tanpa autograd. Ditujukan untuk software engineer yang ingin memahami/merekonstruksi.
 
 ---
@@ -12,7 +12,7 @@
 - **Tugas:** klasifikasi biner citra jalan → `normal` (0) / `pothole` (1).
 - **"Tanpa magic":** konvolusi, pooling, ReLU, softmax, cross-entropy, dan
   **backpropagation** diturunkan matematis lalu dikodekan sendiri. Kebenarannya
-  dibuktikan dengan *numerical gradient checking* (galat 1e-9–1e-11).
+  dibuktikan dengan *numerical gradient checking* (galat 1e-9-1e-11).
 - **Arsitektur acuan:** LeNet-5 (paling sederhana, ideal dipelajari).
 - **Helper (bukan inti):** Pillow (baca/resize citra), scikit-learn (split),
   matplotlib (plot). Inti pembelajaran = 100% NumPy.
@@ -64,20 +64,20 @@ src/
 
 ---
 
-## 2. Pipeline Data (Langkah 1–3)
+## 2. Pipeline Data (Langkah 1-3)
 
-### Langkah 1 — Dataset
+### Langkah 1, Dataset
 Unduh dataset klasifikasi biner dari repo GitHub publik (folder `Pothole/` & `Plain/`),
 petakan `Pothole → pothole (1)`, `Plain → normal (0)`. Hasil: 712 citra (348 normal,
 364 pothole), disimpan ke `data/raw/{pothole,normal}/`.
 
-### Langkah 2 — Pelabelan
+### Langkah 2, Pelabelan
 Baca folder kelas → tulis `labels.csv` (`path,label`) + verifikasi tiap gambar bisa dibuka.
 
-### Langkah 3 — Preprocessing
+### Langkah 3, Preprocessing
 Lima langkah (tiap langkah eksplisit):
 
-1. **Kanal warna:** citra dipertahankan **RGB (3 kanal)** — warna menambah sinyal.
+1. **Kanal warna:** citra dipertahankan **RGB (3 kanal)**, warna menambah sinyal.
    (Opsi grayscale via luminance BT.601 `Y = 0.299R + 0.587G + 0.114B` tetap tersedia.)
 2. **Resize** → 48×48 (input LeNet-5 adaptasi).
 3. **Normalisasi:** skala `[0,1]` lalu standardisasi `(x - μ)/σ` (μ,σ skalar dari data latih).
@@ -89,7 +89,7 @@ Output: `data/processed/dataset.npz` berisi `x_train/y_train/x_val/y_val/x_test/
 
 ---
 
-## 3. CORE — CNN Manual (Langkah 4)  ◄── JANTUNG "TANPA MAGIC"
+## 3. CORE, CNN Manual (Langkah 4)  ◄── JANTUNG "TANPA MAGIC"
 
 Semua lapisan punya antarmuka seragam:
 ```python
@@ -97,7 +97,7 @@ out = layer.forward(x)       # simpan cache utk backward
 dx  = layer.backward(dout)   # kembalikan grad thd input; isi self.grads utk parameter
 ```
 
-### 3.1 im2col / col2im — kunci efisiensi konvolusi
+### 3.1 im2col / col2im, kunci efisiensi konvolusi
 
 Konvolusi naif = 4 loop bersarang (lambat di Python). Trik **im2col** mengubah tiap
 jendela konvolusi menjadi satu kolom matriks → konvolusi jadi **satu perkalian matriks**.
@@ -143,7 +143,7 @@ def col2im(cols, x_shape, kh, kw, stride, pad):
     return x_padded if pad == 0 else x_padded[:, :, pad:-pad, pad:-pad]
 ```
 
-### 3.2 Conv2D — forward & backward
+### 3.2 Conv2D, forward & backward
 
 **Forward:** `O[f,i,j] = b[f] + Σ_c Σ_m Σ_n X[c, iS+m, jS+n] · W[f,c,m,n]`
 → via im2col: `O = W_col @ X_col + b`.
@@ -186,7 +186,7 @@ class Conv2D:
         return col2im(dx_col, x_shape, self.kh, self.kw, self.stride, self.pad)
 ```
 
-### 3.3 MaxPool2D — forward & backward
+### 3.3 MaxPool2D, forward & backward
 Forward: maksimum tiap jendela + simpan posisi argmax. Backward: gradien **hanya**
 mengalir ke posisi pemenang.
 
@@ -246,7 +246,7 @@ class Dense:
         return d @ self.params["W"].T
 ```
 
-### 3.6 Softmax + Cross-Entropy — kenapa digabung
+### 3.6 Softmax + Cross-Entropy, kenapa digabung
 Softmax: `p_i = e^{z_i} / Σ_j e^{z_j}`. Cross-entropy: `L = -Σ y_i ln p_i`.
 Diturunkan **bersama**, gradiennya menyederhana jadi bentuk ringkas & stabil:
 ```
@@ -268,11 +268,11 @@ class SoftmaxCrossEntropy:
 
 ### 3.7 Inisialisasi & Optimizer
 ```python
-# init.py — jaga varians aktivasi stabil
+# init.py ,  jaga varians aktivasi stabil
 def he_normal(shape, fan_in, rng):     return rng.normal(0, np.sqrt(2/fan_in), shape)   # utk ReLU
 def xavier_normal(shape, fan_in, rng): return rng.normal(0, np.sqrt(1/fan_in), shape)   # utk output
 
-# optim.py — SGD + momentum:  v = μv - η∇ ;  θ = θ + v
+# optim.py ,  SGD + momentum:  v = μv - η∇ ;  θ = θ + v
 class SGDMomentum:
     def __init__(self, layers, lr=0.01, momentum=0.9):
         self.layers, self.lr, self.mu = layers, lr, momentum
@@ -325,7 +325,7 @@ for epoch in range(epochs):
     # Ulangi utuh untuk seed 42/7/123 -> ensembel; saat uji rata-ratakan softmax + TTA.
 ```
 
-### 3.10 Gradient checking — BUKTI backprop benar (wajib!)
+### 3.10 Gradient checking, BUKTI backprop benar (wajib!)
 Bandingkan gradien analitik vs numerik (beda hingga terpusat):
 ```
 ∂L/∂θ ≈ ( L(θ+ε) - L(θ-ε) ) / (2ε)
@@ -347,7 +347,7 @@ def numerical_grad(f, x, dout, eps=1e-5):
 
 ---
 
-## 4. Latih, Uji, Visualisasi (Langkah 5–7)
+## 4. Latih, Uji, Visualisasi (Langkah 5-7)
 
 - **Sanity check:** overfit 32 sampel → akurasi ~100% (memastikan model & backprop belajar).
 - **Latih penuh:** 40 epoch, Adam lr=1e-3 + cosine, batch 32, weight decay 1e-4, dropout 0.3;
@@ -362,7 +362,7 @@ daring + ensembel 3 seed; overfitting terkendali (val-acc terbaik ~89,7% @ epoch
 
 ---
 
-## 5. Arsitektur Deployment (opsional — cara publish di homelab k8s)
+## 5. Arsitektur Deployment (opsional, cara publish di homelab k8s)
 
 Situs live di `https://potholes.arisjirat.com`, di-deploy **k8s-native + GitOps (ArgoCD)**:
 

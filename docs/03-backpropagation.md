@@ -1,4 +1,4 @@
-# 03 — Backpropagation (Aliran Gradien Mundur)
+# 03, Backpropagation (Aliran Gradien Mundur)
 
 Backpropagation menghitung gradien loss terhadap setiap parameter dengan
 menerapkan **aturan rantai** dari lapisan terakhir ke lapisan pertama. Gradien
@@ -26,11 +26,11 @@ flowchart TB
 
 | Lapisan | Gradien terhadap masukan | Gradien parameter |
 |---------|--------------------------|-------------------|
-| Softmax+CE | `∂L/∂z = (p − y)/N` | — |
+| Softmax+CE | `∂L/∂z = (p − y)/N` |, |
 | Dense | `dx = δ Wᵀ` | `dW = xᵀ δ`, `db = Σ δ` |
-| ReLU | `dx = δ ⊙ 1[u>0]` | — |
-| Flatten | `dx = reshape(δ)` | — |
-| MaxPool | gradien hanya ke posisi argmax | — |
+| ReLU | `dx = δ ⊙ 1[u>0]` |, |
+| Flatten | `dx = reshape(δ)` |, |
+| MaxPool | gradien hanya ke posisi argmax |, |
 | Conv2D | `dx = col2im(W_col ᵀ δ_col)` | `dW = δ_col · X_colᵀ`, `db = Σ δ` |
 
 ## Mengapa softmax + cross-entropy diturunkan bersama?
@@ -41,7 +41,7 @@ menjadi bentuk yang sangat ringkas dan stabil secara numerik:
 
 $$\frac{\partial L}{\partial z_i} = p_i - y_i$$
 
-Inilah titik awal aliran gradien — vektor `p − y` di lapisan keluaran.
+Inilah titik awal aliran gradien, vektor `p − y` di lapisan keluaran.
 
 ## Implementasi (model.py)
 
@@ -62,4 +62,4 @@ Setiap lapisan berparameter mengisi `self.grads["W"]` dan `self.grads["b"]` saat
 Kebenaran seluruh turunan di atas dibuktikan dengan `src/cnn/gradcheck.py`:
 gradien analitik dibandingkan dengan gradien numerik (beda hingga terpusat).
 Hasil galat relatif tipikal **1e-9 hingga 1e-11** (< ambang 1e-5) untuk semua
-lapisan — bukti bahwa backward diturunkan dengan benar.
+lapisan, bukti bahwa backward diturunkan dengan benar.

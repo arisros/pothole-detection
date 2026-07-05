@@ -1,4 +1,4 @@
-"""Lapisan-lapisan CNN — forward & backward diturunkan dan ditulis manual.
+"""Lapisan-lapisan CNN ,  forward & backward diturunkan dan ditulis manual.
 
 Konvensi tensor citra: (N, C, H, W)
     N = ukuran batch, C = jumlah kanal, H = tinggi, W = lebar.
@@ -63,7 +63,7 @@ class Conv2D(Layer):
 
         rng = rng if rng is not None else np.random.default_rng()
         fan_in = in_channels * self.kh * self.kw
-        # W: (F, C, KH, KW) — He init karena diikuti ReLU.
+        # W: (F, C, KH, KW) ,  He init karena diikuti ReLU.
         self.params["W"] = winit.he_normal(
             (out_channels, in_channels, self.kh, self.kw), fan_in, rng
         )
@@ -167,7 +167,7 @@ class ReLU(Layer):
 
 
 class Dropout(Layer):
-    """Dropout terbalik (inverted dropout) — regularisasi anti-overfitting.
+    """Dropout terbalik (inverted dropout) ,  regularisasi anti-overfitting.
 
     Saat latih: setiap unit dimatikan (di-nol-kan) dengan peluang p, sisanya
     diskalakan 1/(1-p) agar ekspektasi keluaran tetap sama. Saat evaluasi:
