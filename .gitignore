@@ -19,3 +19,64 @@ experiments/*.log
 web/static/figures/
 web/static/content/
 web/static/samples/
+
+# === backup-autoignore: build artifacts & deps (bukan config) ===
+# OS
+.DS_Store
+Thumbs.db
+# Deps
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+# Build output
+build/
+Build/
+Builds/
+dist/
+out/
+bin/
+obj/
+target/
+.gradle/
+*.class
+*.o
+*.a.out
+a.out
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+*.csproj
+*.unityproj
+*.sln.DotSettings.user
+# Godot
+.godot/
+.import/
+export_presets.cfg
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/ios/Pods/
+**/android/.gradle/
+**/build/
+# Node / web
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+# Secrets (config contoh tetap ikut: .env.example)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+!*.pub
